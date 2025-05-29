@@ -1,0 +1,1 @@
+export const remoteImages = ["https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80", "https://unsplash.com/photos/man-in-white-and-blue-striped-crew-neck-shirt-Xc9fIHYnylk", "https://unsplash.com/photos/a-boy-standing-on-a-beach-_BP_9TspIjc"]

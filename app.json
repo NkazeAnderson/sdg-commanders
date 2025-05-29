@@ -33,6 +33,19 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you added pictures to your profile.",
+          "cameraPermission": "The app accesses your camera to let you added pictures to your profile."
+        }
       ]
     ],
     "experiments": {

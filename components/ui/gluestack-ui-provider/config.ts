@@ -3,18 +3,18 @@ import { vars } from 'nativewind';
 
 export const config = {
   light: vars({
-    '--color-primary-0': '179 179 179',
-    '--color-primary-50': '153 153 153',
-    '--color-primary-100': '128 128 128',
-    '--color-primary-200': '115 115 115',
-    '--color-primary-300': '102 102 102',
-    '--color-primary-400': '82 82 82',
-    '--color-primary-500': '51 51 51',
-    '--color-primary-600': '41 41 41',
-    '--color-primary-700': '31 31 31',
-    '--color-primary-800': '13 13 13',
-    '--color-primary-900': '10 10 10',
-    '--color-primary-950': '8 8 8',
+    '--color-primary-0': '219 230 254',
+    '--color-primary-50': '185 205 252',
+    '--color-primary-100': '151 180 248',
+    '--color-primary-200': '118 154 243',
+    '--color-primary-300': '86 127 238',
+    '--color-primary-400': '86 127 238',
+    '--color-primary-500': '86 127 238',
+    '--color-primary-600': '56 98 231',
+    '--color-primary-700': '42 75 181',
+    '--color-primary-800': '28 53 134',
+    '--color-primary-900': '15 33 89',
+    '--color-primary-950': '5 14 48',
 
     /* Secondary  */
     '--color-secondary-0': '253 253 253',
@@ -129,18 +129,18 @@ export const config = {
     '--color-outline-950': '26 23 23',
 
     /* Background */
-    '--color-background-0': '255 255 255',
-    '--color-background-50': '246 246 246',
+   '--color-background-0': '162 163 167',        // #a2a3a7
+    '--color-background-50': '78 81 87',          // #4e5157
     '--color-background-100': '242 241 241',
     '--color-background-200': '220 219 219',
     '--color-background-300': '213 212 212',
     '--color-background-400': '162 163 163',
     '--color-background-500': '142 142 142',
-    '--color-background-600': '116 116 116',
+    '--color-background-600': '8 11 18',          // #080b12
     '--color-background-700': '83 82 82',
     '--color-background-800': '65 64 64',
-    '--color-background-900': '39 38 37',
-    '--color-background-950': '18 18 18',
+    '--color-background-900': '2 3 6',            // #020306
+    '--color-background-950': '0 0 1',  
 
     /* Background Special */
     '--color-background-error': '254 241 241',
