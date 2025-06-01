@@ -3,6 +3,8 @@ import "@/global.css";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 export default function RootLayout() {
@@ -16,11 +18,17 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider mode="light">
-      <Stack>
-        <Stack.Screen name="+not-found" />
-      </Stack>
+    <>
+      <GestureHandlerRootView>
+        <GluestackUIProvider mode="light">
+          <View className="flex-1 bg-gray-600">
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </View>
+        </GluestackUIProvider>
+      </GestureHandlerRootView>
       <StatusBar style="auto" />
-    </GluestackUIProvider>
+    </>
   );
 }
