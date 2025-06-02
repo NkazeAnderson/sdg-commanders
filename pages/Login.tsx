@@ -10,7 +10,7 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { ArrowLeft, Lock, LockOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -48,6 +48,10 @@ const Login = () => {
 
   function changeStep() {
     setStep(!step ? 1 : 0);
+  }
+
+  function confirmCode() {
+    router.push("/tabs");
   }
 
   return (
@@ -122,7 +126,11 @@ const Login = () => {
                       </Box>
                     </Box>
                     <Gradient className="rounded-md mt-10">
-                      <Button size="lg" className="bg-transparent">
+                      <Button
+                        onPress={confirmCode}
+                        size="lg"
+                        className="bg-transparent"
+                      >
                         <ButtonText>Confirm Code</ButtonText>
                         <ButtonIcon as={LockOpen} />
                       </Button>

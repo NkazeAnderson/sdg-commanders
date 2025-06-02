@@ -4,61 +4,22 @@ import MapAvatar from "@/components/MapAvatar";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
-import { Divider } from "@/components/ui/divider";
-import {
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerHeader,
-} from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
-import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { getStartedTexts } from "@/constants";
 import { Link } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, useWindowDimensions } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-const AnimatedDrawerContent = Animated.createAnimatedComponent(DrawerContent);
 
 const GettingStarted = () => {
   const [activeHeadingTextIndex, setActiveHeadingTextIndex] = useState<{
     index: number;
   }>();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const [showDrawer, setshowDrawer] = useState(false);
-  const height = useSharedValue(100);
   const headingTextFlatlistRef = useRef<FlatList>(null);
-
-  const panGesture = Gesture.Pan()
-    .onBegin((e) => {
-      console.log(e);
-    })
-    .onUpdate((e) => {
-      console.log(e.translationY);
-      if (e.translationY > 0) {
-        height.value -= 1;
-      } else {
-        height.value += 1;
-      }
-    });
-
-  // const changeIndex = useCallback(() => {
-  //   let currentvalue = 0;
-  //   setActiveHeadingTextIndex((prev) => {
-  //     currentvalue = prev + 1;
-  //     return prev + 1;
-  //   });
-  //   if (headingTextFlatlistRef.current) {
-  //     headingTextFlatlistRef.current.scrollToIndex({
-  //       index: currentvalue + 1,
-  //     });
-  //   }
-  // }, [activeHeadingTextIndex]);
 
   useEffect(() => {
     headingTextFlatlistRef.current &&
@@ -203,30 +164,6 @@ const GettingStarted = () => {
           </VStack>
         </VStack>
       </SafeAreaView>
-      <Drawer isOpen={showDrawer} size="sm" anchor="bottom">
-        <AnimatedDrawerContent
-          className="rounded-3xl bg-primary-950  border-0 px-0"
-          style={{
-            height,
-          }}
-        >
-          <GestureDetector gesture={panGesture}>
-            <DrawerHeader className="px-4 bg-primary-950">
-              <VStack space="md" className=" items-center w-full">
-                <Center>
-                  <Divider className="w-20 p-1 rounded-full" />
-                </Center>
-                <Heading className="text-typography-100">
-                  Sea Rocket Tech
-                </Heading>
-              </VStack>
-            </DrawerHeader>
-          </GestureDetector>
-          <DrawerBody className="bg-primary-900/10">
-            <Text>Drawer</Text>
-          </DrawerBody>
-        </AnimatedDrawerContent>
-      </Drawer>
     </Box>
   );
 };
