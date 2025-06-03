@@ -96,7 +96,7 @@ const GettingStarted = () => {
           <Center className="py-20">
             <Logo />
             <Heading className="text-cyan-100 uppercase " size="xl">
-              SDG
+              SKG
             </Heading>
           </Center>
           <VStack className=" " space="md">

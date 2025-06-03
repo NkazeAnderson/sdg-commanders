@@ -1,7 +1,7 @@
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useFonts } from "expo-font";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View } from "react-native";
@@ -14,7 +14,7 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    loaded && router.push("/tabs");
+    //   loaded && router.push("/tabs");
   }, [loaded]);
 
   if (!loaded) {
