@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { primaryColors } from "@/constants";
 import { ChevronUp, Send, X } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -28,9 +28,29 @@ const SOS = () => {
   const rippleOpacity = useSharedValue(0.5);
   const avatarTranslation = useSharedValue(0);
   const sosBottomPostion = useSharedValue(0);
+  const sosHeight = useSharedValue(0);
+  const avatarTopPostion = useSharedValue(0);
+  const avatarheight = useSharedValue(0);
   const [message, setMessage] = useState("");
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [isSafe, setIsSafe] = useState<boolean | undefined>(undefined);
+  const sosRef = useRef<View>(null);
+  const avatarRef = useRef<View>(null);
+
+  useEffect(() => {
+    if (sosRef.current) {
+      sosRef.current.measure((x, y, w, h, px, py) => {
+        sosHeight.value = h;
+        setBottomPosition(py + h);
+      });
+    }
+    if (avatarRef.current) {
+      avatarRef.current.measure((x, y, w, h, px, py) => {
+        avatarheight.value = h;
+        avatarTopPostion.value = py;
+      });
+    }
+  }, []);
 
   useEffect(() => {
     isSafe === false && setShowMessageModal(true);
@@ -70,32 +90,31 @@ const SOS = () => {
       avatarTranslation.value = e.translationY;
     })
     .onEnd((e) => {
-      console.log(
-        "ended",
-        e.absoluteY,
-        sosBottomPostion.value,
-        e.absoluteY < sosBottomPostion.value
-      );
-
       if (e.absoluteY < sosBottomPostion.value) {
-        console.log("not safe");
+        const distance = avatarTopPostion.value - sosBottomPostion.value;
+        const sosCenter = distance + sosHeight.value / 6;
+        avatarTranslation.value = withTiming(-sosCenter, { duration: 2000 });
         runOnJS(setIsSafe)(false);
       } else {
+        avatarTranslation.value = withTiming(0, { duration: 2000 });
         runOnJS(setIsSafe)(undefined);
       }
     });
+
+  avatarPanGesture.enabled(isSafe !== false);
+
+  function setBottomPosition(value: number) {
+    "worklet";
+    if (sosBottomPostion.value) return;
+    sosBottomPostion.value = value;
+  }
+
   return (
     <>
       <View className="flex flex-1 bg-primary-950 px-4">
         <SafeAreaView className="flex-1 justify-between">
           <Center>
-            <Box
-              className="w-1/2 aspect-square relative"
-              onLayout={(e) => {
-                const layout = e.nativeEvent.layout;
-                sosBottomPostion.value = layout.y + layout.height;
-              }}
-            >
+            <Box ref={sosRef} className="w-1/2 aspect-square relative">
               <Animated.View style={animatedRippleStyle}></Animated.View>
               <Center className="w-full h-full bg-primary-600 border-4 border-primary-400 rounded-full">
                 <Heading size="xl" className=" text-typography-300">
@@ -104,18 +123,31 @@ const SOS = () => {
               </Center>
             </Box>
           </Center>
-
-          <Center>
-            <Animated.View>
-              <Icon className="text-typography-400 w-10 h-10" as={ChevronUp} />
-              <Icon className="text-typography-400 w-10 h-10" as={ChevronUp} />
-              <Icon className="text-typography-400 w-10 h-10" as={ChevronUp} />
-            </Animated.View>
-          </Center>
+          {isSafe === undefined && (
+            <Center>
+              <Animated.View className={" animate-bounce"}>
+                <Icon
+                  className="text-typography-400 w-10 h-10"
+                  as={ChevronUp}
+                />
+                <Icon
+                  className="text-typography-400 w-10 h-10"
+                  as={ChevronUp}
+                />
+                <Icon
+                  className="text-typography-400 w-10 h-10"
+                  as={ChevronUp}
+                />
+              </Animated.View>
+            </Center>
+          )}
           <Center className="pb-20 gap-2">
             <GestureDetector gesture={avatarPanGesture}>
               <Animated.View style={animatedAvatarPosition}>
-                <Box className={`${isSafe === undefined && "animate-pulse"}  `}>
+                <Box
+                  ref={avatarRef}
+                  className={`${isSafe === undefined && "animate-pulse"}  `}
+                >
                   <MapAvatar
                     user={{
                       name: "Wale",
@@ -128,9 +160,15 @@ const SOS = () => {
                 </Box>
               </Animated.View>
             </GestureDetector>
-            <Heading className=" text-typography-100">
-              Slide into SOS mode
-            </Heading>
+            {isSafe === false ? (
+              <Heading className=" text-success-600">
+                Help is on the way
+              </Heading>
+            ) : (
+              <Heading className=" text-typography-100">
+                Slide into SOS mode
+              </Heading>
+            )}
           </Center>
         </SafeAreaView>
       </View>

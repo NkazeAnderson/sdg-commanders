@@ -12,10 +12,13 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { Link } from "expo-router";
 import {
+  Car,
   ChevronRight,
   CircleUserRound,
   Copy,
+  DollarSign,
   LogOut,
   Users,
 } from "lucide-react-native";
@@ -50,15 +53,41 @@ const Account = () => {
         </HStack>
         <Divider className="my-4" />
         <VStack>
+          <Link href={"/stacks/profile"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon
+                    className="text-primary-600 w-8 h-8"
+                    as={CircleUserRound}
+                  />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Profile
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
+              </HStack>
+            </TouchableOpacity>
+          </Link>
+          <Link href={"/stacks/members"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon className="text-primary-600 w-8 h-8" as={Users} />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Members
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
+              </HStack>
+            </TouchableOpacity>
+          </Link>
           <TouchableOpacity>
             <HStack space="md" className=" items-center justify-between py-4">
               <HStack space="xl" className="items-center ">
-                <Icon
-                  className="text-primary-600 w-8 h-8"
-                  as={CircleUserRound}
-                />
+                <Icon className="text-primary-600 w-8 h-8" as={Car} />
                 <Text size="lg" className="text-typography-100 font-medium ">
-                  Profile
+                  Rides
                 </Text>
               </HStack>
               <Icon className="text-typography-400" as={ChevronRight} />
@@ -67,25 +96,27 @@ const Account = () => {
           <TouchableOpacity>
             <HStack space="md" className=" items-center justify-between py-4">
               <HStack space="xl" className="items-center ">
-                <Icon className="text-primary-600 w-8 h-8" as={Users} />
+                <Icon className="text-primary-600 w-8 h-8" as={DollarSign} />
                 <Text size="lg" className="text-typography-100 font-medium ">
-                  Members
+                  Subscription
                 </Text>
               </HStack>
               <Icon className="text-typography-400" as={ChevronRight} />
             </HStack>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <HStack space="md" className=" items-center justify-between py-4">
-              <HStack space="xl" className="items-center ">
-                <Icon className="text-primary-600 w-8 h-8" as={LogOut} />
-                <Text size="lg" className="text-typography-100 font-medium ">
-                  Sign Out
-                </Text>
+          <Link href={"/login"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon className="text-primary-600 w-8 h-8" as={LogOut} />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Sign Out
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
               </HStack>
-              <Icon className="text-typography-400" as={ChevronRight} />
-            </HStack>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Link>
         </VStack>
       </SafeAreaView>
     </Box>

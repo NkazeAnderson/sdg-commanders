@@ -24,6 +24,7 @@ type InputProps<T extends FieldValues> = {
   helperText?: string;
   left?: React.ReactNode;
   right?: React.ReactNode;
+  disabled?: boolean;
 } & React.ComponentProps<typeof InputField>;
 
 function Input<T extends FieldValues>({
@@ -36,12 +37,13 @@ function Input<T extends FieldValues>({
   left,
   right,
   helperText,
+  disabled,
   ...rest
 }: InputProps<T>) {
   const hasError = errors && errors[name];
 
   return (
-    <FormControl isInvalid={!!hasError} size={"lg"}>
+    <FormControl isInvalid={!!hasError} size={"lg"} isDisabled={disabled}>
       {label && (
         <FormControlLabel>
           <FormControlLabelText className={labelClassName}>

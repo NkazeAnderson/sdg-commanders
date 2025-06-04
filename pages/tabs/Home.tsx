@@ -1,20 +1,14 @@
 import MapAvatar from "@/components/MapAvatar";
-import {
-  Avatar,
-  AvatarFallbackText,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import MemberCard from "@/components/MemberCard";
 
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { DrawerContent } from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
-import { HStack } from "@/components/ui/hstack";
-import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import MapView, { MapMarker } from "react-native-maps";
 import Animated, {
@@ -88,22 +82,12 @@ const Home = () => {
           className="bg-primary-900/10 "
           style={animatedSliderStyles}
         >
-          <HStack space="md" className="p-4 bg-primary-800 rounded-md">
-            <Avatar size={"lg"}>
-              <AvatarFallbackText>""</AvatarFallbackText>
-              <AvatarImage
-                source={{
-                  uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-                }}
-              />
-            </Avatar>
-            <Box className="gap-1">
-              <Heading className=" text-typography-100">John Doe</Heading>
-              <Text className=" text-typography-100">
-                Last Active 5 hrs ago
-              </Text>
-            </Box>
-          </HStack>
+          <Heading size="md" className=" text-typography-100 p-2">
+            Members
+          </Heading>
+          <ScrollView showsVerticalScrollIndicator={false} className=" flex-1 ">
+            <MemberCard role="Son" />
+          </ScrollView>
         </Animated.View>
       </View>
     </Box>

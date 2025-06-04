@@ -87,7 +87,7 @@ const SignUp = () => {
             <ButtonText>{userModes[2]}</ButtonText>
           </Button>
         </HStack>
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <Form className="py-6">
             <Input
               control={control}
@@ -113,14 +113,7 @@ const SignUp = () => {
             <Input
               control={control}
               name="address"
-              label="Address"
-              placeholder="Your address"
-              labelClassName="text-typography-100"
-            />
-            <Input
-              control={control}
-              name="address"
-              label="Address"
+              label="Home Address"
               placeholder="Your address"
               labelClassName="text-typography-100"
             />
@@ -154,7 +147,7 @@ const SignUp = () => {
             <Text className=" text-typography-400 text-center">
               {" "}
               Already have an account?{" "}
-              <Link href={"/login"} className=" text-primary-900 font-bold">
+              <Link href={"/login"} className=" text-black font-bold">
                 Sign In
               </Link>{" "}
             </Text>
