@@ -21,3 +21,5 @@ export const getStartedTexts = [
                 "Ensure safety for loved ones and boost workplace efficiency.",
               ]
 export const userModes = ["Individual", "Agent", "Organisation"] as const
+
+export const userRoles = ["general", "agent", "admin", "staff"] as const

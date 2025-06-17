@@ -61,7 +61,11 @@ function Input<T extends FieldValues>({
             <Box className="px-2">{left}</Box>
             <InputField
               value={value}
-              onChangeText={onChange}
+              onChangeText={(text) =>
+                onChange(
+                  rest.keyboardType?.includes("num") ? parseInt(text) : text
+                )
+              }
               onBlur={onBlur}
               className={`flex-1 rounded-md text-typography-50 ${inputClassName}`}
               {...rest}
@@ -79,8 +83,8 @@ function Input<T extends FieldValues>({
 
       {hasError && (
         <FormControlError>
-          <FormControlErrorIcon as={AlertCircleIcon} />
-          <FormControlErrorText>
+          <FormControlErrorIcon className="text-red-200" as={AlertCircleIcon} />
+          <FormControlErrorText className="text-red-200">
             {errors[name]?.message || "Invalid input."}
           </FormControlErrorText>
         </FormControlError>

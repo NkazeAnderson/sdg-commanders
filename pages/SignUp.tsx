@@ -9,7 +9,12 @@ import Form from "@/components/Form";
 import Gradient from "@/components/Gradient";
 import Input from "@/components/Input";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import {
+  Button,
+  ButtonIcon,
+  ButtonSpinner,
+  ButtonText,
+} from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
@@ -17,20 +22,43 @@ import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { userModes } from "@/constants";
+import { supabase } from "@/supabase";
 import { userModesT } from "@/types";
+import { hookFormErrorHandler } from "@/utils";
+import { usersSchema } from "@/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
+const schema = usersSchema.omit({ id: true });
 const SignUp = () => {
-  const { control } = useForm();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
   const [userMode, setUserMode] = useState<userModesT>(userModes[0]);
+  const password = Math.random().toString(36).slice(-8); // Generate a random password
+  console.log({ password });
 
   function changeMode(index: number) {
     setUserMode(userModes[index]);
   }
+
+  const subbmitForm = async (data: z.infer<typeof schema>) => {
+    await supabase.auth.signUp({
+      email: data.email,
+      password: password,
+    });
+    console.log("done");
+  };
 
   return (
     <KeyboardAvoidingView
@@ -95,32 +123,43 @@ const SignUp = () => {
               label="Name"
               placeholder="Your name"
               labelClassName="text-typography-100"
+              errors={errors}
             />
             <Input
               control={control}
               name="email"
               label="Email"
-              placeholder="Your email"
+              placeholder="johndoe@gmail.com"
               labelClassName="text-typography-100"
+              errors={errors}
             />
             <Input
               control={control}
               name="phone"
               label="Phone"
-              placeholder="Your phone"
+              placeholder="677777777"
               labelClassName="text-typography-100"
+              keyboardType="number-pad"
+              errors={errors}
             />
             <Input
               control={control}
-              name="address"
+              name="home_address"
               label="Home Address"
-              placeholder="Your address"
+              placeholder="Your home address"
               labelClassName="text-typography-100"
+              errors={errors}
             />
           </Form>
           <HStack space="md" className=" justify-start py-3">
-            <Checkbox size={"md"} value="checkbox-id">
-              <CheckboxIndicator>
+            <Checkbox
+              size={"md"}
+              value="checkbox-id"
+              onChange={(value) => setValue("accepted_terms", value)}
+            >
+              <CheckboxIndicator
+                className={`${errors.accepted_terms && "!border-red-500"}`}
+              >
                 <CheckboxIcon as={CheckIcon} />
               </CheckboxIndicator>
             </Checkbox>
@@ -139,9 +178,18 @@ const SignUp = () => {
           </HStack>
           <VStack space="md" className="py-10 justify-end">
             <Gradient className="rounded-md">
-              <Button size="lg" className="bg-transparent">
+              <Button
+                size="lg"
+                className={"bg-transparent"}
+                disabled={isSubmitting}
+                onPress={handleSubmit(subbmitForm, hookFormErrorHandler)}
+              >
                 <ButtonText>Sign Up</ButtonText>
-                <ButtonIcon as={ArrowRight} />
+                {isSubmitting ? (
+                  <ButtonSpinner />
+                ) : (
+                  <ButtonIcon as={ArrowRight} />
+                )}
               </Button>
             </Gradient>
             <Text className=" text-typography-400 text-center">

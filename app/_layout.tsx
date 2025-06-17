@@ -1,10 +1,10 @@
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useFonts } from "expo-font";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
@@ -14,26 +14,25 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    loaded && router.push("/tabs/sos");
+    // loaded && router.push("/tabs/sos");
   }, [loaded]);
 
   if (!loaded) {
-    // Async font loading only occurs in development.
+    console.log("Not loaded in " + Platform.OS);
+
     return null;
   }
-
+  console.log("Loaded in " + Platform.OS);
   return (
     <>
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1, display: "flex" }}>
         <GluestackUIProvider mode="light">
           <View className="flex-1 bg-gray-600">
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="+not-found" />
-            </Stack>
+            <Stack screenOptions={{ headerShown: false }} />
           </View>
         </GluestackUIProvider>
       </GestureHandlerRootView>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </>
   );
 }
