@@ -1,3 +1,4 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
 import {
   Avatar,
   AvatarBadge,
@@ -23,29 +24,39 @@ import {
   Users,
 } from "lucide-react-native";
 import React from "react";
-import { TouchableOpacity } from "react-native";
+import { Share, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const Account = () => {
+  const {
+    userMethods: { user },
+  } = useAppContext();
   return (
     <Box className="flex-1 bg-primary-950">
       <SafeAreaView className="px-4">
         <HStack space="md" className=" items-center">
           <Avatar size={"lg"}>
-            <AvatarFallbackText>""</AvatarFallbackText>
+            <AvatarFallbackText>{user?.name}</AvatarFallbackText>
             <AvatarImage
               source={{
-                uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+                uri: user?.profile_picture ?? undefined,
               }}
             />
             {<AvatarBadge />}
           </Avatar>
           <Box>
             <Heading className="capitalize text-typography-300">
-              User Name
+              {user?.name}
             </Heading>
             <HStack space="md" className=" items-center">
-              <Text className="text-typography-400">1234567890</Text>
-              <Button variant="link">
+              <Text className="text-typography-400">{`${
+                user?.id.split("-")[0]
+              }...`}</Text>
+              <Button
+                variant="link"
+                onPress={() => {
+                  Share.share({ message: user?.id!, title: "SGK ID" });
+                }}
+              >
                 <ButtonIcon as={Copy} />
               </Button>
             </HStack>

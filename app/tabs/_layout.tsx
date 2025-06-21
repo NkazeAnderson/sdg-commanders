@@ -1,14 +1,26 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
 import Gradient from "@/components/Gradient";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { primaryColors } from "@/constants";
+import { getUserLocation } from "@/utils";
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Settings } from "lucide-react-native";
-import React from "react";
+import React, { useEffect } from "react";
 
 const _layout = () => {
+  const { setUserLocation } = useAppContext().userMethods;
+  // get the user location and set it in the context
+  useEffect(() => {
+    getUserLocation()
+      .then((location) => setUserLocation(location?.coords ?? undefined))
+      .catch((err) => {
+        console.error("Error getting user location:", err);
+      });
+  }, []);
+
   return (
     <Tabs
       screenOptions={{

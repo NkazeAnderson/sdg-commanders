@@ -23,3 +23,9 @@ export const getStartedTexts = [
 export const userModes = ["Individual", "Agent", "Organisation"] as const
 
 export const userRoles = ["general", "agent", "admin", "staff"] as const
+
+export const tables = {users:"users", groups:"groups", "group_members":"group_members", "sos":"sos","sos_responses":"sos_responses", "agent_duty":"agent_duty", group_member_invites:"group_member_invites"  } as const
+
+export const days = ["monday", "tuesday", "wednesday", "thursday", "saturday", "sunday"] as const
+
+export const storageBuckets = {public: "public-media"} as const

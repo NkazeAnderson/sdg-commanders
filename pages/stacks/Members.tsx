@@ -1,79 +1,139 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
 import Form from "@/components/Form";
+import GroupMembersList from "@/components/GroupMembersList";
 import Input from "@/components/Input";
-import MemberCard from "@/components/MemberCard";
-import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-import { Plus, PlusCircle, X } from "lucide-react-native";
+import {
+  Button,
+  ButtonIcon,
+  ButtonSpinner,
+  ButtonText,
+} from "@/components/ui/button";
+import { Center } from "@/components/ui/center";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { createGroup } from "@/supabase/groups";
+import { groupT, withoutIdT } from "@/types";
+import { hookFormErrorHandler } from "@/utils";
+import { groupsSchema } from "@/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowRight, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { ScrollView, View } from "react-native";
-import Animated, { SlideInRight } from "react-native-reanimated";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
+import Animated, { SlideInDown } from "react-native-reanimated";
 
 const Members = () => {
+  const [createFamily, setCreateFamily] = useState(false);
+
   const [addNewMember, setAddNewMember] = useState(false);
   const { control } = useForm();
   function toggleAddMember() {
     setAddNewMember((prev) => !prev);
   }
+  function toggleCreateFamily() {
+    setCreateFamily((prev) => !prev);
+  }
+  const {
+    userMethods: { myGroups, user },
+  } = useAppContext();
+  const createFamilyForm = useForm({
+    resolver: zodResolver(groupsSchema.omit({ id: true })),
+    defaultValues: {
+      admin_id: user?.id,
+    },
+  });
+
+  async function sumbitCreateFamily(data: withoutIdT<groupT>) {
+    if (!user) {
+      throw new Error("User is required");
+    }
+    Keyboard.isVisible() && Keyboard.dismiss();
+    const res = await createGroup(data);
+    console.log(res);
+
+    // await createGroupMember({
+    //   member_id: user.id,
+    //   role: "main",
+    // });
+    toggleCreateFamily();
+  }
+
+  const groupsKeys = !myGroups ? [] : Object.keys(myGroups);
+
   return (
-    <View className=" flex-1 bg-primary-900">
-      <ScrollView className=" ">
-        <VStack space="xs">
-          <HStack
-            className={`${
-              addNewMember ? " justify-center" : " justify-end"
-            } py-2 `}
-          >
-            {!addNewMember ? (
-              <Button onPress={toggleAddMember} className=" rounded-l-full">
-                <ButtonIcon as={Plus} />
-                <ButtonText>Add Member</ButtonText>
-              </Button>
-            ) : (
-              <Button
-                onPress={toggleAddMember}
-                action="negative"
-                className=" rounded-full aspect-square"
-              >
-                <ButtonIcon as={X} />
-              </Button>
-            )}
-          </HStack>
-          {addNewMember && (
-            <Animated.View entering={SlideInRight.mass(100)}>
-              <Form className="pb-6 px-4">
-                <Input
-                  control={control}
-                  name="phone"
-                  label="Phone"
-                  placeholder="phone"
-                  labelClassName="text-typography-0"
-                />
-                <Input
-                  control={control}
-                  name="role"
-                  label="Role"
-                  placeholder="Son"
-                  helperText="Example: Son"
-                  labelClassName="text-typography-0"
-                />
-                <Box className="">
-                  <Button>
-                    <ButtonText>Submit</ButtonText>
-                    <ButtonIcon as={PlusCircle} />
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === "android" ? 80 : 0}
+      className="flex-1"
+    >
+      <View className=" flex-1 bg-primary-900 p-4">
+        {Boolean(groupsKeys.length) && myGroups && (
+          <ScrollView>
+            {groupsKeys.map((item) => {
+              const members = myGroups[item];
+              return <GroupMembersList key={item} members={members} manage />;
+            })}
+          </ScrollView>
+        )}
+        {!Boolean(groupsKeys.length) && (
+          <Center className=" flex-1 gap-4 p">
+            {createFamily ? (
+              <Animated.View entering={SlideInDown} className={"w-full"}>
+                <Center>
+                  <Button
+                    onPress={toggleCreateFamily}
+                    action="negative"
+                    className=" rounded-full aspect-square"
+                  >
+                    <ButtonIcon as={X} />
                   </Button>
-                </Box>
-              </Form>
-            </Animated.View>
-          )}
-          <MemberCard role="Son" manage />
-          <MemberCard role="Daughter" manage />
-          <MemberCard role="Wife" manage />
-        </VStack>
-      </ScrollView>
-    </View>
+                </Center>
+                <Form>
+                  <Heading className=" text-center text-typography-100">
+                    Create a family
+                  </Heading>
+                  <Input
+                    label="Family name"
+                    control={createFamilyForm.control}
+                    name="name"
+                    labelClassName="text-typography-50"
+                    returnKeyLabel="Add"
+                    returnKeyType="send"
+                  />
+                  <Button
+                    disabled={createFamilyForm.formState.isSubmitting}
+                    onPress={createFamilyForm.handleSubmit(
+                      sumbitCreateFamily,
+                      hookFormErrorHandler
+                    )}
+                  >
+                    <ButtonText>Submit</ButtonText>
+                    {!createFamilyForm.formState.isSubmitting ? (
+                      <ButtonIcon as={ArrowRight} />
+                    ) : (
+                      <ButtonSpinner />
+                    )}
+                  </Button>
+                </Form>
+              </Animated.View>
+            ) : (
+              <>
+                <Text>You are not a member of a family or organisation</Text>
+                <Button onPress={toggleCreateFamily}>
+                  <ButtonText>Create a family</ButtonText>
+                </Button>
+              </>
+            )}
+          </Center>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

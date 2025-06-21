@@ -1,4 +1,5 @@
-import { Trash } from "lucide-react-native";
+import { userT } from "@/types";
+import { Info, Trash } from "lucide-react-native";
 import React from "react";
 import { Text } from "react-native";
 import { Avatar, AvatarFallbackText, AvatarImage } from "./ui/avatar";
@@ -6,8 +7,27 @@ import { Box } from "./ui/box";
 import { Button, ButtonIcon } from "./ui/button";
 import { Heading } from "./ui/heading";
 import { HStack } from "./ui/hstack";
+import { Icon } from "./ui/icon";
 
-const MemberCard = ({ manage, role }: { manage?: boolean; role: string }) => {
+const MemberCard = ({
+  manage,
+  role,
+  user,
+}: {
+  manage?: boolean;
+  role: string;
+  user?: userT;
+}) => {
+  if (!user) {
+    return (
+      <HStack>
+        <Icon className=" text-warning-100" as={Info} />
+        <Text className=" text-typography-200">
+          Pending invitation for {role.toLowerCase()}
+        </Text>
+      </HStack>
+    );
+  }
   return (
     <HStack
       space="sm"
@@ -15,17 +35,19 @@ const MemberCard = ({ manage, role }: { manage?: boolean; role: string }) => {
     >
       <HStack space="md" className=" items-center">
         <Avatar size={"lg"}>
-          <AvatarFallbackText>""</AvatarFallbackText>
+          <AvatarFallbackText>{user.name}</AvatarFallbackText>
           <AvatarImage
             source={{
-              uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+              uri: user.profile_picture ?? "",
             }}
           />
         </Avatar>
         <Box className="gap-1">
-          <Heading className=" text-typography-100">John Doe</Heading>
+          <Heading className=" text-typography-100 capitalize">
+            {user.name}
+          </Heading>
           <Text className=" text-typography-100">
-            {role && manage ? role : "Last Active 5 hrs ago"}
+            {role && manage ? role : user.is_safe ? "All good" : "On SOS"}
           </Text>
         </Box>
       </HStack>

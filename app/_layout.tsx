@@ -1,3 +1,4 @@
+import AppContextProvider from "@/components/context/AppContextProvider";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useFonts } from "expo-font";
@@ -28,7 +29,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1, display: "flex" }}>
         <GluestackUIProvider mode="light">
           <View className="flex-1 bg-gray-600">
-            <Stack screenOptions={{ headerShown: false }} />
+            <AppContextProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+            </AppContextProvider>
           </View>
         </GluestackUIProvider>
       </GestureHandlerRootView>

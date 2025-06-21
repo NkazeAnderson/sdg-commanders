@@ -1,17 +1,64 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
 import Form from "@/components/Form";
 import Gradient from "@/components/Gradient";
 import Input from "@/components/Input";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import {
+  Button,
+  ButtonIcon,
+  ButtonSpinner,
+  ButtonText,
+} from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Icon } from "@/components/ui/icon";
 import { VStack } from "@/components/ui/vstack";
+import { uploadBase64ImageToSupabase } from "@/supabase/pictures";
+import { updateUser } from "@/supabase/users";
+import { userT } from "@/types";
+import { getImageFromGallery, hookFormErrorHandler } from "@/utils";
+import { usersSchema } from "@/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ImagePickerAsset } from "expo-image-picker";
 import { ArrowRight, Camera, CircleUserRound } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const EditProfile = () => {
-  const { control } = useForm();
+  const [profilePictureAsset, setProfilePictureAsset] =
+    useState<ImagePickerAsset>();
+  const {
+    userMethods: { user, setUser },
+  } = useAppContext();
+  const {
+    control,
+    setValue,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm({
+    resolver: zodResolver(usersSchema),
+    defaultValues: user ?? {},
+  });
+
+  async function submit(data: userT) {
+    Object.keys(data).forEach((item) => {
+      //@ts-ignore
+      if (!data[item]) {
+        //@ts-ignore
+        delete data[item];
+      }
+    });
+    if (profilePictureAsset) {
+      const url = await uploadBase64ImageToSupabase(profilePictureAsset);
+      console.log(url);
+
+      data.profile_picture = url;
+    }
+    const res = await updateUser(data);
+    console.log(res);
+    setUser({ ...user, ...data });
+    return res;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -21,12 +68,33 @@ const EditProfile = () => {
       <SafeAreaView className="flex-1">
         <Center>
           <Center className="w-36 aspect-square rounded-full bg-primary-200 relative">
-            <Icon className="w-20 h-20 text-primary-600" as={CircleUserRound} />
+            {profilePictureAsset || user?.profile_picture ? (
+              <Avatar size="2xl">
+                <AvatarImage
+                  source={{
+                    uri: profilePictureAsset
+                      ? profilePictureAsset.uri
+                      : user?.profile_picture ?? "",
+                  }}
+                />
+              </Avatar>
+            ) : (
+              <Icon
+                className="w-20 h-20 text-primary-600"
+                as={CircleUserRound}
+              />
+            )}
             <Button
               action={"primary"}
               variant={"solid"}
               size={"md"}
               className="aspect-square rounded-full absolute bottom-4 -right-0"
+              onPress={async () => {
+                const res = await getImageFromGallery();
+                if (res) {
+                  setProfilePictureAsset(res);
+                }
+              }}
             >
               <ButtonIcon as={Camera} />
             </Button>
@@ -41,6 +109,7 @@ const EditProfile = () => {
               label="Name"
               placeholder="Your name"
               labelClassName="text-typography-100"
+              errors={errors}
             />
             <Input
               control={control}
@@ -48,6 +117,7 @@ const EditProfile = () => {
               label="Email"
               placeholder="Your email"
               labelClassName="text-typography-100"
+              errors={errors}
             />
             <Input
               control={control}
@@ -63,28 +133,33 @@ const EditProfile = () => {
               label="Emergency Phone"
               placeholder="Optional phone incase of emergency"
               labelClassName="text-typography-100"
+              errors={errors}
+              keyboardType="number-pad"
             />
             <Input
               control={control}
-              name="address"
+              name="home_address"
               label="Home Address"
               placeholder="Your address"
               labelClassName="text-typography-100"
-            />
-            <Input
-              control={control}
-              name="family"
-              label="Family"
-              placeholder="Family Name"
-              labelClassName="text-typography-100"
+              errors={errors}
             />
           </Form>
 
           <VStack space="md" className="py-10 justify-end">
             <Gradient className="rounded-md">
-              <Button size="lg" className="bg-transparent">
+              <Button
+                size="lg"
+                className="bg-transparent"
+                onPress={handleSubmit(submit, hookFormErrorHandler)}
+                disabled={isSubmitting}
+              >
                 <ButtonText>Submit</ButtonText>
-                <ButtonIcon as={ArrowRight} />
+                {isSubmitting ? (
+                  <ButtonSpinner />
+                ) : (
+                  <ButtonIcon as={ArrowRight} />
+                )}
               </Button>
             </Gradient>
           </VStack>

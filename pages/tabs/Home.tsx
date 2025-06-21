@@ -1,5 +1,6 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
+import GroupMembersList from "@/components/GroupMembersList";
 import MapAvatar from "@/components/MapAvatar";
-import MemberCard from "@/components/MemberCard";
 
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
@@ -7,10 +8,10 @@ import { Divider } from "@/components/ui/divider";
 import { DrawerContent } from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
 import { VStack } from "@/components/ui/vstack";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import MapView, { MapMarker } from "react-native-maps";
+import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -18,12 +19,10 @@ import Animated, {
 const AnimatedDrawerContent = Animated.createAnimatedComponent(DrawerContent);
 const Home = () => {
   const [showDrawer, setshowDrawer] = useState(true);
-  // useEffect(() => {
-  //   Location.requestForegroundPermissionsAsync();
-  //   Location.getCurrentPositionAsync().then((res) => {
-  //     console.log(res.coords);
-  //   });
-  // }, []);
+  const {
+    userMethods: { userLocation, user, myGroups },
+  } = useAppContext();
+  const mapRef = useRef<MapView>(null);
   const height = useSharedValue(100);
   const animatedSliderStyles = useAnimatedStyle(() => {
     return {
@@ -43,6 +42,22 @@ const Home = () => {
         height.value += 2;
       }
     });
+
+  useEffect(() => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          ...userLocation,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        2000
+      );
+    }
+  }, [userLocation]);
+
+  const groupsKeys = !myGroups ? [] : Object.keys(myGroups);
+
   return (
     <Box className=" flex-1 relative">
       <View className=" flex-1 border relative">
@@ -51,20 +66,16 @@ const Home = () => {
             width: "100%",
             height: "100%",
           }}
+          ref={mapRef}
           showsTraffic
           showsBuildings
+          provider={PROVIDER_GOOGLE}
         >
-          <MapMarker coordinate={{ latitude: 3.8617, longitude: 11.5202 }}>
-            <MapAvatar
-              user={{
-                name: "Wale",
-                id: "7776777",
-                profilePic:
-                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-              }}
-              safe={true}
-            />
-          </MapMarker>
+          {userLocation && (
+            <MapMarker coordinate={userLocation}>
+              <MapAvatar user={user!} safe={true} />
+            </MapMarker>
+          )}
         </MapView>
       </View>
       <View className=" w-full bg-primary-950  border-0  absolute bottom-0 rounded-t-3xl">
@@ -74,6 +85,7 @@ const Home = () => {
               <Center>
                 <Divider className="w-20 p-1 rounded-full" />
               </Center>
+
               <Heading className="text-typography-100">Sea Rocket Tech</Heading>
             </VStack>
           </View>
@@ -86,7 +98,14 @@ const Home = () => {
             Members
           </Heading>
           <ScrollView showsVerticalScrollIndicator={false} className=" flex-1 ">
-            <MemberCard role="Son" />
+            {Boolean(groupsKeys.length) && myGroups && (
+              <ScrollView>
+                {groupsKeys.map((item) => {
+                  const members = myGroups[item];
+                  return <GroupMembersList key={item} members={members} />;
+                })}
+              </ScrollView>
+            )}
           </ScrollView>
         </Animated.View>
       </View>

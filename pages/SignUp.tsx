@@ -21,7 +21,7 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { userModes } from "@/constants";
+import { tables, userModes } from "@/constants";
 import { supabase } from "@/supabase";
 import { userModesT } from "@/types";
 import { hookFormErrorHandler } from "@/utils";
@@ -45,19 +45,31 @@ const SignUp = () => {
     resolver: zodResolver(schema),
   });
   const [userMode, setUserMode] = useState<userModesT>(userModes[0]);
-  const password = Math.random().toString(36).slice(-8); // Generate a random password
-  console.log({ password });
+  const password = "123456789"; //Math.random().toString(36).slice(-8); // Generate a random password
 
   function changeMode(index: number) {
     setUserMode(userModes[index]);
   }
+  // useEffect(() => {
+  //   supabase.auth
+  //     .signInWithOtp({
+  //       phone: "237683403750",
+  //     })
+  //     .then((res) => console.log(res))
+  //     .catch((e) => console.log(e));
+  // }, []);
 
   const subbmitForm = async (data: z.infer<typeof schema>) => {
-    await supabase.auth.signUp({
+    const { data: dataRes, error } = await supabase.auth.signUp({
       email: data.email,
       password: password,
     });
-    console.log("done");
+    if (dataRes.user) {
+      const { error } = await supabase
+        .from(tables.users)
+        .insert({ ...data, id: dataRes.user.id });
+      console.log({ error });
+    }
   };
 
   return (
@@ -74,10 +86,10 @@ const SignUp = () => {
             <Box className=" w-1/4">
               <Divider className="bg-background-400 " />
             </Box>
-            <Text className="py-2 text-typography-100">Join As</Text>
+            {/* <Text className="py-2 text-typography-100">Join As</Text> */}
           </VStack>
         </Center>
-        <HStack>
+        {/* <HStack>
           <Button
             className={`flex-1 rounded-l-xl rounded-r-none ${
               userMode === userModes[0]
@@ -114,7 +126,7 @@ const SignUp = () => {
           >
             <ButtonText>{userModes[2]}</ButtonText>
           </Button>
-        </HStack>
+        </HStack> */}
         <ScrollView showsVerticalScrollIndicator={false}>
           <Form className="py-6">
             <Input

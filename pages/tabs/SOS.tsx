@@ -1,3 +1,4 @@
+import { useAppContext } from "@/components/context/AppContextProvider";
 import Form from "@/components/Form";
 import Gradient from "@/components/Gradient";
 import MapAvatar from "@/components/MapAvatar";
@@ -9,6 +10,9 @@ import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { primaryColors } from "@/constants";
+import { addMessageToSOS, createSOS } from "@/supabase/sos";
+import { sosT, withoutIdT } from "@/types";
+import { getUserLocation } from "@/utils";
 import { ChevronUp, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, View } from "react-native";
@@ -33,10 +37,17 @@ const SOS = () => {
   const avatarheight = useSharedValue(0);
   const [message, setMessage] = useState("");
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [isSafe, setIsSafe] = useState<boolean | undefined>(undefined);
   const sosRef = useRef<View>(null);
-  const avatarRef = useRef<View>(null);
 
+  const [newSOSId, setNewSOSId] = useState("");
+  const avatarRef = useRef<View>(null);
+  const {
+    userMethods: { user },
+  } = useAppContext();
+
+  const [isSafe, setIsSafe] = useState<boolean | undefined | null>(
+    user?.is_safe
+  );
   useEffect(() => {
     if (sosRef.current) {
       sosRef.current.measure((x, y, w, h, px, py) => {
@@ -51,10 +62,6 @@ const SOS = () => {
       });
     }
   }, []);
-
-  useEffect(() => {
-    isSafe === false && setShowMessageModal(true);
-  }, [isSafe]);
 
   useEffect(() => {
     rippleScale.value = withRepeat(
@@ -95,6 +102,7 @@ const SOS = () => {
         const sosCenter = distance + sosHeight.value / 6;
         avatarTranslation.value = withTiming(-sosCenter, { duration: 2000 });
         runOnJS(setIsSafe)(false);
+        runOnJS(sendSOS)();
       } else {
         avatarTranslation.value = withTiming(0, { duration: 2000 });
         runOnJS(setIsSafe)(undefined);
@@ -109,6 +117,30 @@ const SOS = () => {
     sosBottomPostion.value = value;
   }
 
+  async function sendSOS() {
+    try {
+      const location = await getUserLocation();
+      console.log(location);
+
+      if (!location) {
+        throw new Error("Location required");
+      }
+      const sos: withoutIdT<sosT> = {
+        location: location.coords,
+        sent_by: user?.id!,
+      };
+      const res = await createSOS(sos);
+      console.log(res);
+      if (res.data && !Array.isArray(res.data)) {
+        setNewSOSId(res.data.id!);
+      } else {
+        throw new Error("id required from newSOS");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <>
       <View className="flex flex-1 bg-primary-950 px-4">
@@ -117,9 +149,13 @@ const SOS = () => {
             <Box ref={sosRef} className="w-1/2 aspect-square relative">
               <Animated.View style={animatedRippleStyle}></Animated.View>
               <Center className="w-full h-full bg-primary-600 border-4 border-primary-400 rounded-full">
-                <Heading size="xl" className=" text-typography-300">
-                  SOS
-                </Heading>
+                {isSafe ? (
+                  <Heading size="xl" className=" text-typography-300">
+                    SOS
+                  </Heading>
+                ) : (
+                  <MapAvatar user={user!} safe={user?.is_safe ?? undefined} />
+                )}
               </Center>
             </Box>
           </Center>
@@ -142,37 +178,34 @@ const SOS = () => {
             </Center>
           )}
           <Center className="pb-20 gap-2">
-            <GestureDetector gesture={avatarPanGesture}>
-              <Animated.View style={animatedAvatarPosition}>
-                <Box
-                  ref={avatarRef}
-                  className={`${isSafe === undefined && "animate-pulse"}  `}
-                >
-                  <MapAvatar
-                    user={{
-                      name: "Wale",
-                      id: "7776777",
-                      profilePic:
-                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-                    }}
-                    safe={isSafe}
-                  />
-                </Box>
-              </Animated.View>
-            </GestureDetector>
             {isSafe === false ? (
               <Heading className=" text-success-600">
                 Help is on the way
               </Heading>
             ) : (
-              <Heading className=" text-typography-100">
-                Slide into SOS mode
-              </Heading>
+              <>
+                <GestureDetector gesture={avatarPanGesture}>
+                  <Animated.View style={animatedAvatarPosition}>
+                    <Box
+                      ref={avatarRef}
+                      className={`${isSafe === undefined && "animate-pulse"}  `}
+                    >
+                      <MapAvatar
+                        user={user!}
+                        safe={user?.is_safe ?? undefined}
+                      />
+                    </Box>
+                  </Animated.View>
+                </GestureDetector>
+                <Heading className=" text-typography-100">
+                  Slide into SOS mode
+                </Heading>
+              </>
             )}
           </Center>
         </SafeAreaView>
       </View>
-      <Modal isOpen={showMessageModal}>
+      <Modal isOpen={newSOSId ? true : false}>
         <Pressable
           onPress={() => {
             Keyboard.dismiss();
@@ -202,7 +235,17 @@ const SOS = () => {
             </Textarea>
 
             <Gradient>
-              <Button className="bg-transparent">
+              <Button
+                className="bg-transparent"
+                onPress={() => {
+                  if (newSOSId && message) {
+                    addMessageToSOS({ id: newSOSId, message }).then((res) => {
+                      setNewSOSId("");
+                      setMessage("");
+                    });
+                  }
+                }}
+              >
                 <ButtonText>Send Message</ButtonText>
                 <ButtonIcon as={Send} />
               </Button>

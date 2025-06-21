@@ -1,3 +1,4 @@
+import { userT } from "@/types";
 import { ArrowRight } from "lucide-react-native";
 import React, { useState } from "react";
 import { Avatar, AvatarFallbackText, AvatarImage } from "./ui/avatar";
@@ -11,7 +12,7 @@ const UserAvatar = ({
   rotationAngle,
   safe,
 }: {
-  user: { name: string; id: string; profilePic?: string };
+  user: userT;
   rotationAngle?: number;
   safe?: boolean;
 }) => {
@@ -31,8 +32,8 @@ const UserAvatar = ({
       <AvatarFallbackText>{user.name}</AvatarFallbackText>
       <AvatarImage
         source={
-          user.profilePic
-            ? { uri: user.profilePic }
+          user.profile_picture && !user.is_agent
+            ? { uri: user.profile_picture }
             : require("@/assets/images/sdg-officer.png")
         }
       />
@@ -45,7 +46,7 @@ const MapAvatar = ({
   rotationAngle,
   safe,
 }: {
-  user: { name: string; id: string; profilePic?: string };
+  user: userT;
   rotationAngle?: number;
   safe?: boolean;
 }) => {
