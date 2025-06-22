@@ -90,7 +90,6 @@ const GettingStarted = () => {
       }
     );
     shared.value = [...shared.value];
-    console.log("Done");
   }
 
   useEffect(() => {
@@ -134,8 +133,12 @@ const GettingStarted = () => {
               user={{
                 name: "Wale",
                 id: "7776777",
-                profilePic:
+                profile_picture:
                   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+                email: "",
+                home_address: "",
+                accepted_terms: false,
+                phone: 888,
               }}
               safe={userIsSafe}
             />
@@ -146,6 +149,13 @@ const GettingStarted = () => {
               user={{
                 name: "Wale",
                 id: "7776777",
+                profile_picture:
+                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+                email: "",
+                home_address: "",
+                accepted_terms: false,
+                phone: 888,
+                is_agent: true,
               }}
               rotationAngle={userIsSafe ? undefined : 210} // 210}
             />
@@ -156,6 +166,13 @@ const GettingStarted = () => {
               user={{
                 name: "Wale",
                 id: "7776777",
+                profile_picture:
+                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+                email: "",
+                home_address: "",
+                accepted_terms: false,
+                phone: 888,
+                is_agent: true,
               }}
               rotationAngle={userIsSafe ? undefined : 60}
             />

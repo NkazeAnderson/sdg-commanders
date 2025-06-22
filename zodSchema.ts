@@ -8,7 +8,8 @@ export const usersSchema = createInsertSchema(usersTable, {
         .max(699999999, "Phone number too longs"),
         home_address:(schema) => schema.min(10, "Too short").max(50, "Too long"),
         accepted_terms:(schema) => schema.refine(val => val, "You must accept the terms and conditions"),
-        name:(schema)=>schema.toLowerCase()
+        name:(schema)=>schema.toLowerCase(),
+        
 })
 
 export const groupMembersSchema = createInsertSchema(GroupMembersTable)

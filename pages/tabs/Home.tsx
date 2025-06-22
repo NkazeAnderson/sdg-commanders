@@ -7,9 +7,10 @@ import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { DrawerContent } from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps";
 import Animated, {
@@ -19,11 +20,13 @@ import Animated, {
 const AnimatedDrawerContent = Animated.createAnimatedComponent(DrawerContent);
 const Home = () => {
   const [showDrawer, setshowDrawer] = useState(true);
+  const { height: windowsHeight } = useWindowDimensions();
   const {
-    userMethods: { userLocation, user, myGroups },
+    userMethods: { userLocation, user, myGroups, setUserLocation },
   } = useAppContext();
   const mapRef = useRef<MapView>(null);
-  const height = useSharedValue(100);
+  const markerRef = useRef<MapMarker>(null);
+  const height = useSharedValue(windowsHeight / 4);
   const animatedSliderStyles = useAnimatedStyle(() => {
     return {
       height: height.value,
@@ -53,8 +56,19 @@ const Home = () => {
         },
         2000
       );
+      markerRef.current && markerRef.current.forceUpdate();
     }
   }, [userLocation]);
+
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     setUserLocation((prev) => {
+  //       if (prev) {
+  //         return { ...prev, latitude: prev.latitude + 0.5 };
+  //       }
+  //     });
+  //   }, 5000);
+  // }, []);
 
   const groupsKeys = !myGroups ? [] : Object.keys(myGroups);
 
@@ -71,11 +85,22 @@ const Home = () => {
           showsBuildings
           provider={PROVIDER_GOOGLE}
         >
-          {userLocation && (
-            <MapMarker coordinate={userLocation}>
-              <MapAvatar user={user!} safe={true} />
-            </MapMarker>
-          )}
+          <MapMarker
+            ref={markerRef}
+            coordinate={
+              userLocation ?? {
+                latitude: 0,
+                longitude: 0,
+              }
+            }
+          >
+            <MapAvatar user={user!} safe={user?.is_safe ?? undefined} />
+            {user?.is_safe === false && (
+              <Text size="sm" className="text-red-600">
+                Not safe!
+              </Text>
+            )}
+          </MapMarker>
         </MapView>
       </View>
       <View className=" w-full bg-primary-950  border-0  absolute bottom-0 rounded-t-3xl">
@@ -95,9 +120,12 @@ const Home = () => {
           style={animatedSliderStyles}
         >
           <Heading size="md" className=" text-typography-100 p-2">
-            Members
+            Member Groups
           </Heading>
-          <ScrollView showsVerticalScrollIndicator={false} className=" flex-1 ">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className=" flex-1 py-4"
+          >
             {Boolean(groupsKeys.length) && myGroups && (
               <ScrollView>
                 {groupsKeys.map((item) => {

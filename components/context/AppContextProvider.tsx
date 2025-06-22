@@ -29,23 +29,23 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
   const userMethods = useUser();
   const { user } = userMethods;
   useEffect(() => {
+    //supabase.auth.signOut();
     supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        supabase.auth.signInWithPassword({
-          email: "wale@gmail.com",
-          password: "123456789",
-        });
-      }
-
       if (session?.user) {
         getUserById(session.user.id).then(({ data, error }) => {
           if (data) {
             userMethods.setUser(data as userT);
             router.push("/tabs");
-          } else {
-            console.error("Error fetching user:", error);
+          } else if (error) {
+            console.log(error);
           }
         });
+      }
+      if (event === "SIGNED_OUT") {
+        console.log("signout");
+
+        router.dismissAll();
+        router.replace("/login");
       }
     });
   }, []);

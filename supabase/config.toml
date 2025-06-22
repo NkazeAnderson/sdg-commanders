@@ -210,10 +210,10 @@ max_frequency = "5s"
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 [auth.sms.twilio]
 enabled = true
-account_sid = "1234567"
-message_service_sid = "12345678"
+account_sid = "env(TWILIO_ACCOUNT_ID)"
+message_service_sid = "env(TWILIO_SERVICE_ID)"
 # DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
-auth_token = "1234566"
+auth_token = "env(TWILIO_AUTH_TOKEN)"
 
 # Multi-factor-authentication is available to Supabase Pro plan.
 [auth.mfa]

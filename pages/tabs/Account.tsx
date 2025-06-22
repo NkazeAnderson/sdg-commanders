@@ -13,6 +13,7 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { supabase } from "@/supabase";
 import { Link } from "expo-router";
 import {
   Car,
@@ -23,13 +24,20 @@ import {
   LogOut,
   Users,
 } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Share, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const Account = () => {
   const {
     userMethods: { user },
   } = useAppContext();
+  const [loggingOut, setLoggingOut] = useState(false);
+  function logOut() {
+    setLoggingOut(true);
+    supabase.auth.signOut().then(() => {
+      setLoggingOut(false);
+    });
+  }
   return (
     <Box className="flex-1 bg-primary-950">
       <SafeAreaView className="px-4">
@@ -115,19 +123,18 @@ const Account = () => {
               <Icon className="text-typography-400" as={ChevronRight} />
             </HStack>
           </TouchableOpacity>
-          <Link href={"/login"} asChild>
-            <TouchableOpacity>
-              <HStack space="md" className=" items-center justify-between py-4">
-                <HStack space="xl" className="items-center ">
-                  <Icon className="text-primary-600 w-8 h-8" as={LogOut} />
-                  <Text size="lg" className="text-typography-100 font-medium ">
-                    Sign Out
-                  </Text>
-                </HStack>
-                <Icon className="text-typography-400" as={ChevronRight} />
+
+          <TouchableOpacity onPress={logOut}>
+            <HStack space="md" className=" items-center justify-between py-4">
+              <HStack space="xl" className="items-center ">
+                <Icon className="text-primary-600 w-8 h-8" as={LogOut} />
+                <Text size="lg" className="text-typography-100 font-medium ">
+                  {loggingOut ? "Signing Out..." : "Sign Out"}
+                </Text>
               </HStack>
-            </TouchableOpacity>
-          </Link>
+              <Icon className="text-typography-400" as={ChevronRight} />
+            </HStack>
+          </TouchableOpacity>
         </VStack>
       </SafeAreaView>
     </Box>

@@ -4,14 +4,20 @@ import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
-import { primaryColors } from "@/constants";
+import { primaryColors, tables } from "@/constants";
+import {
+  postgresChangesChannel,
+  registerToPostgresChanges,
+} from "@/supabase/realtime";
 import { getUserLocation } from "@/utils";
+import { usersSchema } from "@/zodSchema";
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Settings } from "lucide-react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 const _layout = () => {
-  const { setUserLocation } = useAppContext().userMethods;
+  const { setUserLocation, user, setUser } = useAppContext().userMethods;
+  const postgresChangesRegistrationStatus = useRef(false);
   // get the user location and set it in the context
   useEffect(() => {
     getUserLocation()
@@ -19,6 +25,29 @@ const _layout = () => {
       .catch((err) => {
         console.error("Error getting user location:", err);
       });
+    postgresChangesRegistrationStatus.current === false &&
+      registerToPostgresChanges(
+        (payload) => {
+          if (payload.table === tables.users) {
+            const schema = usersSchema;
+            if (payload.new) {
+              const newUser = usersSchema.parse(payload.new);
+              if (newUser.id === user?.id) {
+                setUser(newUser);
+              }
+            }
+          }
+        },
+        (registered) => {
+          postgresChangesRegistrationStatus.current = registered;
+        }
+      );
+
+    return () => {
+      postgresChangesChannel.unsubscribe().then(() => {
+        postgresChangesRegistrationStatus.current = false;
+      });
+    };
   }, []);
 
   return (

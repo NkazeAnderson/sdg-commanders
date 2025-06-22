@@ -10,7 +10,8 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { Link, router } from "expo-router";
+import { supabase } from "@/supabase";
+import { Link, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Lock, LockOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,27 +22,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const steps = ["credential", "code"] as const;
 
 const Login = () => {
-  const { control, watch, setValue } = useForm<{ phone: string; code: string }>(
-    {
-      defaultValues: { code: "" },
-    }
-  );
-  const [step, setStep] = useState(0);
+  const { phone } = useLocalSearchParams<{ phone?: string }>();
+  const { control, watch, setValue, getValues } = useForm<{
+    phone: string;
+    code: string;
+  }>({
+    defaultValues: { code: "", phone },
+  });
+  const [step, setStep] = useState(!phone ? 0 : 1);
 
   const code = watch("code");
+  console.log(code);
 
   useEffect(() => {
-    if (code.length > 4) {
+    if (String(code).length > 6) {
       setValue("code", "");
     }
   }, [code]);
 
   useEffect(() => {
-    flatListRef &&
-      flatListRef.current?.scrollToIndex({
-        index: step,
-        animated: true,
-      });
+    setTimeout(() => {
+      flatListRef.current &&
+        flatListRef.current.scrollToIndex({
+          index: step,
+          animated: true,
+        });
+    }, 500);
   }, [step]);
 
   const flatListRef = useRef<FlatList>(null);
@@ -50,8 +56,17 @@ const Login = () => {
     setStep(!step ? 1 : 0);
   }
 
-  function confirmCode() {
-    router.push("/tabs");
+  async function confirmCode() {
+    const res = await supabase.auth.verifyOtp({
+      phone: `237${getValues("phone")}`,
+      token: String(code),
+      type: "sms",
+    });
+    console.log({ res });
+
+    if (res.data.user) {
+      console.log(res.data.user);
+    }
   }
 
   return (
@@ -104,13 +119,16 @@ const Login = () => {
                   <Form space="2xl" className="pb-10 pt-20 px-4 w-[100vw]">
                     <Box className="relative ">
                       <HStack space="md" className="px-[10%] ">
-                        {["", "", "", ""].map((item, index) => (
+                        {["", "", "", "", "", ""].map((item, index) => (
                           <Box
                             key={index}
                             className=" border-2 rounded-lg flex-1 flex items-center justify-center aspect-square border-primary-900 bg-background-100"
                           >
-                            <Heading size="2xl" className=" leading-none">
-                              {code[index] ?? ""}
+                            <Heading
+                              size="sm"
+                              className=" leading-none text-black"
+                            >
+                              {String(code)[index] ?? ""}
                             </Heading>
                           </Box>
                         ))}

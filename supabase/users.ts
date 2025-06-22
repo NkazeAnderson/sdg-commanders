@@ -8,7 +8,7 @@ const userTableRef = supabase.from(tables.users)
 
 
 
-export async function insertUser(user:userT ) {
+export async function createUser(user:userT ) {
    return await userTableRef.insert(user)
 }
 

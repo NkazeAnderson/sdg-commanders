@@ -21,13 +21,13 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { tables, userModes } from "@/constants";
+import { userModes } from "@/constants";
 import { supabase } from "@/supabase";
 import { userModesT } from "@/types";
 import { hookFormErrorHandler } from "@/utils";
 import { usersSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -36,17 +36,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 const schema = usersSchema.omit({ id: true });
 const SignUp = () => {
+  const { phone, groupId } = useLocalSearchParams<{
+    phone?: string;
+    groupId?: string;
+  }>();
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
+    reset,
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: { phone: phone ? parseInt(phone) : undefined },
   });
   const [userMode, setUserMode] = useState<userModesT>(userModes[0]);
   const password = "123456789"; //Math.random().toString(36).slice(-8); // Generate a random password
-
   function changeMode(index: number) {
     setUserMode(userModes[index]);
   }
@@ -60,16 +65,22 @@ const SignUp = () => {
   // }, []);
 
   const subbmitForm = async (data: z.infer<typeof schema>) => {
-    const { data: dataRes, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: password,
+    const { data: dataRes, error } = await supabase.auth.signInWithOtp({
+      phone: `237${data.phone}`,
+      options: { shouldCreateUser: true, data },
     });
-    if (dataRes.user) {
-      const { error } = await supabase
-        .from(tables.users)
-        .insert({ ...data, id: dataRes.user.id });
-      console.log({ error });
+    console.log({ dataRes, error });
+
+    if (!error) {
+      router.push(`/login?phone=${data.phone}`);
+      reset();
     }
+    // if (dataRes.user) {
+    //   const { error } = await supabase
+    //     .from(tables.users)
+    //     .insert({ ...data, id: dataRes.user.id });
+    //   console.log({ error });
+    // }
   };
 
   return (

@@ -46,7 +46,11 @@ const MemberCard = ({
           <Heading className=" text-typography-100 capitalize">
             {user.name}
           </Heading>
-          <Text className=" text-typography-100">
+          <Text
+            className={` ${
+              !user.is_safe ? "text-error-100" : "text-success-100"
+            } `}
+          >
             {role && manage ? role : user.is_safe ? "All good" : "On SOS"}
           </Text>
         </Box>

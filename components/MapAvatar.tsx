@@ -32,7 +32,7 @@ const UserAvatar = ({
       <AvatarFallbackText>{user.name}</AvatarFallbackText>
       <AvatarImage
         source={
-          user.profile_picture && !user.is_agent
+          !user.is_agent
             ? { uri: user.profile_picture }
             : require("@/assets/images/sdg-officer.png")
         }

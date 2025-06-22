@@ -38,6 +38,7 @@ const SOS = () => {
   const [message, setMessage] = useState("");
   const [showMessageModal, setShowMessageModal] = useState(false);
   const sosRef = useRef<View>(null);
+  const [sendingSOS, setSendingSOS] = useState(false);
 
   const [newSOSId, setNewSOSId] = useState("");
   const avatarRef = useRef<View>(null);
@@ -45,9 +46,6 @@ const SOS = () => {
     userMethods: { user },
   } = useAppContext();
 
-  const [isSafe, setIsSafe] = useState<boolean | undefined | null>(
-    user?.is_safe
-  );
   useEffect(() => {
     if (sosRef.current) {
       sosRef.current.measure((x, y, w, h, px, py) => {
@@ -82,7 +80,9 @@ const SOS = () => {
     width: "100%",
     height: "100%",
     borderRadius: 9999,
-    backgroundColor: primaryColors["--color-primary-500"], // Tailwind primary-400
+    backgroundColor: user?.is_safe
+      ? primaryColors["--color-primary-500"]
+      : "red", // Tailwind primary-400
     opacity: rippleOpacity.value,
     transform: [{ scale: rippleScale.value }],
     zIndex: 0,
@@ -98,18 +98,16 @@ const SOS = () => {
     })
     .onEnd((e) => {
       if (e.absoluteY < sosBottomPostion.value) {
-        const distance = avatarTopPostion.value - sosBottomPostion.value;
-        const sosCenter = distance + sosHeight.value / 6;
-        avatarTranslation.value = withTiming(-sosCenter, { duration: 2000 });
-        runOnJS(setIsSafe)(false);
         runOnJS(sendSOS)();
       } else {
-        avatarTranslation.value = withTiming(0, { duration: 2000 });
-        runOnJS(setIsSafe)(undefined);
+        avatarTranslation.value = withTiming(0, {
+          duration: 2000,
+          easing: Easing.bounce,
+        });
       }
     });
 
-  avatarPanGesture.enabled(isSafe !== false);
+  avatarPanGesture.enabled(user?.is_safe ?? true);
 
   function setBottomPosition(value: number) {
     "worklet";
@@ -118,10 +116,9 @@ const SOS = () => {
   }
 
   async function sendSOS() {
+    setSendingSOS(true);
     try {
       const location = await getUserLocation();
-      console.log(location);
-
       if (!location) {
         throw new Error("Location required");
       }
@@ -130,15 +127,15 @@ const SOS = () => {
         sent_by: user?.id!,
       };
       const res = await createSOS(sos);
-      console.log(res);
       if (res.data && !Array.isArray(res.data)) {
-        setNewSOSId(res.data.id!);
+        runOnJS(setNewSOSId)(res.data.id!);
       } else {
         throw new Error("id required from newSOS");
       }
     } catch (error) {
       console.log(error);
     }
+    setSendingSOS(false);
   }
 
   return (
@@ -148,10 +145,16 @@ const SOS = () => {
           <Center>
             <Box ref={sosRef} className="w-1/2 aspect-square relative">
               <Animated.View style={animatedRippleStyle}></Animated.View>
-              <Center className="w-full h-full bg-primary-600 border-4 border-primary-400 rounded-full">
-                {isSafe ? (
+              <Center
+                className={`w-full h-full ${
+                  user?.is_safe
+                    ? "bg-primary-600 border-primary-400"
+                    : "bg-error-200 border-error-50"
+                }  border-4  rounded-full`}
+              >
+                {user?.is_safe ? (
                   <Heading size="xl" className=" text-typography-300">
-                    SOS
+                    {sendingSOS ? "Sending" : "SOS"}
                   </Heading>
                 ) : (
                   <MapAvatar user={user!} safe={user?.is_safe ?? undefined} />
@@ -159,7 +162,7 @@ const SOS = () => {
               </Center>
             </Box>
           </Center>
-          {isSafe === undefined && (
+          {user?.is_safe && (
             <Center>
               <Animated.View className={" animate-bounce"}>
                 <Icon
@@ -178,7 +181,7 @@ const SOS = () => {
             </Center>
           )}
           <Center className="pb-20 gap-2">
-            {isSafe === false ? (
+            {user?.is_safe === false ? (
               <Heading className=" text-success-600">
                 Help is on the way
               </Heading>
@@ -188,7 +191,9 @@ const SOS = () => {
                   <Animated.View style={animatedAvatarPosition}>
                     <Box
                       ref={avatarRef}
-                      className={`${isSafe === undefined && "animate-pulse"}  `}
+                      className={`${
+                        user?.is_safe !== true && "animate-pulse"
+                      }  `}
                     >
                       <MapAvatar
                         user={user!}
@@ -218,7 +223,7 @@ const SOS = () => {
             action="secondary"
             onPress={() => {
               Keyboard.dismiss();
-              setShowMessageModal(false);
+              setNewSOSId("");
             }}
           >
             <ButtonIcon className="text-white" as={X} />
