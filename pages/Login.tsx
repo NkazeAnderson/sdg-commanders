@@ -53,7 +53,16 @@ const Login = () => {
   const flatListRef = useRef<FlatList>(null);
 
   function changeStep() {
-    setStep(!step ? 1 : 0);
+    !phone
+      ? supabase.auth
+          .signInWithOtp({
+            phone: `237${getValues("phone")}`,
+            options: { channel: "sms" },
+          })
+          .then(() => {
+            setStep(!step ? 1 : 0);
+          })
+      : setStep(!step ? 1 : 0);
   }
 
   async function confirmCode() {
@@ -101,6 +110,7 @@ const Login = () => {
                       label="Phone"
                       placeholder="Your phone"
                       labelClassName="text-typography-100"
+                      disabled={Boolean(phone)}
                     />
                     <Gradient className="rounded-md">
                       <Button
