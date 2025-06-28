@@ -11,6 +11,7 @@ import {
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
+import useToast from "@/hooks/useToast";
 import { createGroup } from "@/supabase/groups";
 import { groupT, withoutIdT } from "@/types";
 import { hookFormErrorHandler } from "@/utils";
@@ -42,6 +43,7 @@ const Members = () => {
   const {
     userMethods: { myGroups, user },
   } = useAppContext();
+  const toast = useToast();
   const createFamilyForm = useForm({
     resolver: zodResolver(groupsSchema.omit({ id: true })),
     defaultValues: {
@@ -55,12 +57,11 @@ const Members = () => {
     }
     Keyboard.isVisible() && Keyboard.dismiss();
     const res = await createGroup(data);
-    console.log(res);
-
-    // await createGroupMember({
-    //   member_id: user.id,
-    //   role: "main",
-    // });
+    if (!res.error) {
+      toast.show({ message: "Family successly created" });
+    } else {
+      toast.show({ message: res.error.message, status: "error" });
+    }
     toggleCreateFamily();
   }
 

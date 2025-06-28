@@ -1,9 +1,10 @@
+import useToast from "@/hooks/useToast";
 import {
   createGroupMember,
   groupMembersJoinedSchemaT,
 } from "@/supabase/groups";
 import { hookFormErrorHandler } from "@/utils";
-import { groupMembersSchema } from "@/zodSchema";
+import { groupMembersSchema, usersSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, PlusCircle, X } from "lucide-react-native";
 import React, { useState } from "react";
@@ -24,7 +25,7 @@ import { VStack } from "./ui/vstack";
 
 const schema = groupMembersSchema
   .omit({ id: true })
-  .extend({ phone: z.number() });
+  .merge(usersSchema.pick({ phone: true }));
 
 const GroupMembersList = ({
   members,
@@ -34,14 +35,14 @@ const GroupMembersList = ({
   manage?: boolean;
 }) => {
   const [addNewMember, setAddNewMember] = useState(false);
-  const group = members[0].group_id;
+  const group = members[0]?.group_id;
   const {
     userMethods: { user },
   } = useAppContext();
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -51,9 +52,16 @@ const GroupMembersList = ({
   function toggleAddMember() {
     setAddNewMember((prev) => !prev);
   }
+  const toast = useToast();
+
   async function submit(data: z.infer<typeof schema>) {
     const res = await createGroupMember(data);
-    console.log(res);
+    if (!res.error) {
+      toast.show({ message: "Invitation sent" });
+      toggleAddMember();
+    } else {
+      toast.show({ message: "Invitation not sent", status: "error" });
+    }
   }
   return (
     <VStack space="xs">
@@ -98,6 +106,7 @@ const GroupMembersList = ({
                   placeholder="phone"
                   labelClassName="text-typography-0"
                   keyboardType="number-pad"
+                  errors={errors}
                 />
                 <Input
                   control={control}
@@ -106,6 +115,7 @@ const GroupMembersList = ({
                   placeholder="Son"
                   helperText="Example: Son"
                   labelClassName="text-typography-0"
+                  errors={errors}
                 />
                 <Box className="">
                   <Button

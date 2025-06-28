@@ -1,14 +1,23 @@
 import { useAppContext } from "@/components/context/AppContextProvider";
 import GroupMembersList from "@/components/GroupMembersList";
 import MapAvatar from "@/components/MapAvatar";
+import {
+  Avatar,
+  AvatarFallbackText,
+  AvatarImage,
+} from "@/components/ui/avatar";
 
 import { Box } from "@/components/ui/box";
+import { Button, ButtonIcon } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { DrawerContent } from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
+import { HStack } from "@/components/ui/hstack";
+import { ThreeDotsIcon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { Bell, MessageCircle, Siren } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -23,6 +32,7 @@ const Home = () => {
   const { height: windowsHeight } = useWindowDimensions();
   const {
     userMethods: { userLocation, user, myGroups, setUserLocation },
+    sos,
   } = useAppContext();
   const mapRef = useRef<MapView>(null);
   const markerRef = useRef<MapMarker>(null);
@@ -103,6 +113,27 @@ const Home = () => {
           </MapMarker>
         </MapView>
       </View>
+      <View className=" absolute top-12 right-4  ">
+        <HStack space="lg" className=" justify-end items-center">
+          <Button
+            size="lg"
+            className=" bg-primary-950 rounded-full aspect-square relative"
+          >
+            <ButtonIcon as={MessageCircle} />
+            <Box className="absolute -right-1 top-0 aspect-square w-3 rounded-full p-0.5 bg-error-700">
+              <Text size="xs" className="text-white leading-none text-center">
+                1
+              </Text>
+            </Box>
+          </Button>
+          <Button
+            size="lg"
+            className=" bg-primary-950 rounded-full aspect-square"
+          >
+            <ButtonIcon as={Bell} />
+          </Button>
+        </HStack>
+      </View>
       <View className=" w-full bg-primary-950  border-0  absolute bottom-0 rounded-t-3xl">
         <GestureDetector gesture={panGesture}>
           <View className="px-4 bg-primary-950 py-4 rounded-t-3xl">
@@ -111,7 +142,7 @@ const Home = () => {
                 <Divider className="w-20 p-1 rounded-full" />
               </Center>
 
-              <Heading className="text-typography-100">Sea Rocket Tech</Heading>
+              <Heading className="text-typography-100">SGK Commanders</Heading>
             </VStack>
           </View>
         </GestureDetector>
@@ -120,17 +151,49 @@ const Home = () => {
           style={animatedSliderStyles}
         >
           <Heading size="md" className=" text-typography-100 p-2">
-            Member Groups
+            {user?.is_agent ? "SOS List" : "Member Groups"}
           </Heading>
           <ScrollView
             showsVerticalScrollIndicator={false}
             className=" flex-1 py-4"
           >
-            {Boolean(groupsKeys.length) && myGroups && (
+            {Boolean(groupsKeys.length) && myGroups && !user?.is_agent && (
               <ScrollView>
                 {groupsKeys.map((item) => {
                   const members = myGroups[item];
                   return <GroupMembersList key={item} members={members} />;
+                })}
+              </ScrollView>
+            )}
+            {user?.is_agent && Boolean(sos.length) && (
+              <ScrollView>
+                {sos.map((item) => {
+                  return (
+                    <HStack space="sm" className=" items-center p-2">
+                      <Avatar>
+                        <AvatarFallbackText>
+                          {item.sent_by.name}
+                        </AvatarFallbackText>
+                        <AvatarImage
+                          source={{ uri: item.sent_by.profile_picture ?? "/" }}
+                        />
+                      </Avatar>
+                      <Box className="flex-grow">
+                        <Heading className=" text-typography-100 capitalize">
+                          {item.sent_by.name}
+                        </Heading>
+                        <Text size="sm">{item.message}</Text>
+                      </Box>
+                      <HStack space="sm">
+                        <Button action="positive">
+                          <ButtonIcon as={Siren} />
+                        </Button>
+                        <Button>
+                          <ButtonIcon as={ThreeDotsIcon} />
+                        </Button>
+                      </HStack>
+                    </HStack>
+                  );
                 })}
               </ScrollView>
             )}

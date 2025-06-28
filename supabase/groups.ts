@@ -1,10 +1,9 @@
 import { tables } from "@/constants"
 import { groupMemberT, groupT, withoutIdT } from "@/types"
-import { sendSMS } from "@/utils"
+import { parseDatabaseResponse, sendSMS } from "@/utils"
 import { groupMembersSchema, groupsSchema, usersSchema } from "@/zodSchema"
 import { z } from "zod"
 import { supabase } from "."
-import { getUserByPhone } from "./users"
 
 const groupsTableRef = supabase.from(tables.groups)
 const groupMembersTableRef = supabase.from(tables.group_members)
@@ -21,8 +20,6 @@ if (groupsRes.data) {
     
     for(let group of groups) {
         const membersRes = await groupMembersTableRef.select("*, group_id (*), member_id (*)").eq("group_id", group.group_id)
-        console.log(membersRes.data);
-        
         const members = groupMembersJoinedSchema.array().parse(membersRes.data)
         myGroups[group.group_id] = members
         membersRes.error && errors.push(membersRes.error)
@@ -30,6 +27,10 @@ if (groupsRes.data) {
 }
 
 return {data:myGroups, errors}
+}
+export async function getGroupMember(membershipId:string) {
+    const membersRes = await groupMembersTableRef.select("*, group_id (*), member_id (*)").eq("id", membershipId).single()
+    return parseDatabaseResponse(membersRes, groupMembersJoinedSchema)
 }
 
 export async function createGroup(group:withoutIdT<groupT>) {
@@ -40,22 +41,13 @@ export async function createGroupMember(groupMember:withoutIdT<groupMemberT> & {
     phone:number
 }) {
     const {phone, ...rest} = groupMember
-    const user = await getUserByPhone(phone)
-    if (user.data && !Array.isArray(user.data)) {
-        groupMember.member_id = user.data.id
-    }
-    else{
-        delete groupMember.member_id
-    }
-    const res = await groupMembersTableRef.insert(rest).select()
-    sendSMS({message:"", phone})
+    const res = await groupMembersTableRef.insert(rest).select().single()
+    res.data?.id && sendSMS({message:`You have been invited to join a family on SGK Commanders. Follow this link to accept: sgkcommanders://index?phone=${phone}&memberId=${res.data.id}`, phone})
     return res
 }
 
-export async function acceptGroupInvite({parsedToken}:{parsedToken:{phone:number, membership_id:number}}) {
-    const user =await supabase.auth.getUser()
-    if (user.data && parsedToken.phone.toString() === user.data.user?.phone) {
-        const member:Partial<groupMemberT> = {member_id: user.data.user.id, invitation_accepted:true}
-        groupMembersTableRef.update(member).eq("id", parsedToken.membership_id)
-    }
+export async function acceptGroupInvite(userId:string, membership_id:string) {
+        const member:Partial<groupMemberT> = {member_id: userId, invitation_accepted:true}
+       const res = await groupMembersTableRef.update(member).eq("id", membership_id)
+       return res
 }

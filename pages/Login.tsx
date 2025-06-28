@@ -3,40 +3,53 @@ import Gradient from "@/components/Gradient";
 import Input from "@/components/Input";
 import Logo from "@/components/Logo";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import {
+  Button,
+  ButtonIcon,
+  ButtonSpinner,
+  ButtonText,
+} from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import useToast from "@/hooks/useToast";
 import { supabase } from "@/supabase";
+import { hookFormErrorHandler } from "@/utils";
+import { usersSchema } from "@/zodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Lock, LockOpen } from "lucide-react-native";
+import { ArrowLeft, Check, Lock } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { KeyboardAvoidingView } from "react-native";
+import { KeyboardAvoidingView, TextInput } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
 
 const steps = ["credential", "code"] as const;
 
 const Login = () => {
   const { phone } = useLocalSearchParams<{ phone?: string }>();
-  const { control, watch, setValue, getValues } = useForm<{
-    phone: string;
-    code: string;
-  }>({
-    defaultValues: { code: "", phone },
+  const [code, setCode] = useState("");
+  const [pending, setPending] = useState(false);
+  const phoneForm = useForm({
+    defaultValues: phone ? { phone: Number(phone) } : {},
+    //@ts-ignore
+    resolver: zodResolver(usersSchema.pick({ phone: true })),
+  });
+  const codeForm = useForm({
+    resolver: zodResolver(z.object({ code: z.number() })),
   });
   const [step, setStep] = useState(!phone ? 0 : 1);
-
-  const code = watch("code");
-  console.log(code);
+  const toast = useToast();
+  //const code = codeForm.watch("code");
 
   useEffect(() => {
-    if (String(code).length > 6) {
-      setValue("code", "");
+    if (code && String(code).length > 6) {
+      setCode("");
     }
   }, [code]);
 
@@ -53,29 +66,41 @@ const Login = () => {
   const flatListRef = useRef<FlatList>(null);
 
   function changeStep() {
-    !phone
-      ? supabase.auth
-          .signInWithOtp({
-            phone: `237${getValues("phone")}`,
+    if (!phone) {
+      phoneForm.handleSubmit(
+        async (data) => {
+          const res = await supabase.auth.signInWithOtp({
+            phone: `237${data.phone}`,
             options: { channel: "sms" },
-          })
-          .then(() => {
+          });
+          if (!res.error) {
             setStep(!step ? 1 : 0);
-          })
-      : setStep(!step ? 1 : 0);
+          } else {
+            toast.show({ message: res.error.message, status: "error" });
+          }
+        },
+        (e) => {
+          hookFormErrorHandler(e);
+        }
+      )();
+    } else {
+      setStep(!step ? 1 : 0);
+    }
   }
 
   async function confirmCode() {
+    setPending(true);
     const res = await supabase.auth.verifyOtp({
-      phone: `237${getValues("phone")}`,
-      token: String(code),
+      phone: `237${phoneForm.getValues("phone")}`,
+      token: code,
       type: "sms",
     });
-    console.log({ res });
-
-    if (res.data.user) {
-      console.log(res.data.user);
+    if (res.error) {
+      toast.show({ message: res.error.message, status: "error" });
+    } else {
+      toast.show({ message: "Successfully logged in" });
     }
+    setPending(false);
   }
 
   return (
@@ -105,21 +130,28 @@ const Login = () => {
                 return (
                   <Form space="2xl" className="pb-10 pt-20 px-4 w-[100vw]">
                     <Input
-                      control={control}
+                      control={phoneForm.control}
                       name="phone"
                       label="Phone"
                       placeholder="Your phone"
                       labelClassName="text-typography-100"
                       disabled={Boolean(phone)}
+                      keyboardType="number-pad"
+                      errors={phoneForm.formState.errors}
                     />
                     <Gradient className="rounded-md">
                       <Button
                         size="lg"
                         className="bg-transparent"
                         onPress={changeStep}
+                        disabled={phoneForm.formState.isSubmitting}
                       >
                         <ButtonText>Sign In</ButtonText>
-                        <ButtonIcon as={Lock} />
+                        {!phoneForm.formState.isSubmitting ? (
+                          <ButtonIcon as={Lock} />
+                        ) : (
+                          <ButtonSpinner />
+                        )}
                       </Button>
                     </Gradient>
                   </Form>
@@ -138,18 +170,25 @@ const Login = () => {
                               size="sm"
                               className=" leading-none text-black"
                             >
-                              {String(code)[index] ?? ""}
+                              {code && code[index] ? code[index] : ""}
                             </Heading>
                           </Box>
                         ))}
                       </HStack>
                       <Box className="absolute top-1/4 w-full ">
-                        <Input
-                          control={control}
-                          inputClassName=" text-transparent !caret-transparent  cursor-transparent !bg-transparent !border-transparent !outline-none"
+                        {/* <Input
+                          control={codeForm.control}
                           name="code"
+                          keyboardType="number-pad"
+                          /> */}
+                        <TextInput
+                          className=" text-transparent !caret-transparent  cursor-transparent !bg-transparent !border-transparent !outline-none"
                           selectionColor={"transparent"}
                           keyboardType="number-pad"
+                          value={code}
+                          onChangeText={(text) => {
+                            setCode(text);
+                          }}
                         />
                       </Box>
                     </Box>
@@ -158,16 +197,23 @@ const Login = () => {
                         onPress={confirmCode}
                         size="lg"
                         className="bg-transparent"
+                        disabled={pending}
                       >
                         <ButtonText>Confirm Code</ButtonText>
-                        <ButtonIcon as={LockOpen} />
+                        {!pending ? (
+                          <ButtonIcon as={Check} />
+                        ) : (
+                          <ButtonSpinner />
+                        )}
                       </Button>
                     </Gradient>
                     <Button
                       size="sm"
                       className="bg-transparent"
                       variant="link"
-                      onPress={changeStep}
+                      onPress={() => {
+                        setStep(0);
+                      }}
                     >
                       <ButtonIcon as={ArrowLeft} />
                       <ButtonText>Go Back</ButtonText>

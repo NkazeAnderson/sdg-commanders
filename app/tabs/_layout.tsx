@@ -5,18 +5,23 @@ import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { primaryColors, tables } from "@/constants";
+import { getGroupMember, groupMembersJoinedSchemaT } from "@/supabase/groups";
 import {
   postgresChangesChannel,
   registerToPostgresChanges,
 } from "@/supabase/realtime";
+import { groupT } from "@/types";
 import { getUserLocation } from "@/utils";
-import { usersSchema } from "@/zodSchema";
+import { groupMembersSchema, usersSchema } from "@/zodSchema";
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Settings } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 
+const cachedGroups: groupT[] = [];
+
 const _layout = () => {
-  const { setUserLocation, user, setUser } = useAppContext().userMethods;
+  const { setUserLocation, user, setUser, myGroups, setMyGroups } =
+    useAppContext().userMethods;
   const postgresChangesRegistrationStatus = useRef(false);
   // get the user location and set it in the context
   useEffect(() => {
@@ -28,13 +33,49 @@ const _layout = () => {
     postgresChangesRegistrationStatus.current === false &&
       registerToPostgresChanges(
         (payload) => {
+          console.log(payload);
+
           if (payload.table === tables.users) {
             const schema = usersSchema;
             if (payload.new) {
-              const newUser = usersSchema.parse(payload.new);
+              const newUser = schema.parse(payload.new);
               if (newUser.id === user?.id) {
                 setUser(newUser);
               }
+            }
+          } else if (payload.table === tables.group_members) {
+            if (payload.new) {
+              const member = groupMembersSchema.parse(payload.new);
+              getGroupMember(member.id!)
+                .then((res) => {
+                  console.log(res);
+
+                  if (res.data && !Array.isArray(res.data)) {
+                    setMyGroups((prev) => {
+                      if (prev && prev[member.group_id]) {
+                        const index = prev[member.group_id].findIndex(
+                          (item) => item.member_id?.id === member.member_id
+                        );
+                        if (index >= 0) {
+                          prev[member.group_id][index] =
+                            res.data as groupMembersJoinedSchemaT;
+                        } else {
+                          prev[member.group_id].push(
+                            res.data as groupMembersJoinedSchemaT
+                          );
+                        }
+                      } else {
+                        prev[member.group_id] = [
+                          res.data as groupMembersJoinedSchemaT,
+                        ];
+                      }
+                      return { ...prev };
+                    });
+                  }
+                })
+                .catch((e) => {
+                  console.log(e);
+                });
             }
           }
         },

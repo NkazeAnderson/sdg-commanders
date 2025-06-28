@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "sdg-commanders",
-    "slug": "sdg-commanders",
+    "name": "sgk-commanders",
+    "slug": "sgk-commanders",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "sdgcommanders",
+    "scheme": "sgkcommanders",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -55,7 +55,8 @@
           "photosPermission": "The app accesses your photos to let you added pictures to your profile.",
           "cameraPermission": "The app accesses your camera to let you added pictures to your profile."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 export function useUser() {
     const [user, setUser] = useState<userT>();
     const [userLocation, setUserLocation] = useState<LocationObjectCoords>();
-    const [myGroups, setMyGroups] = useState<Record<string,groupMembersJoinedSchemaT[]>>();
+    const [myGroups, setMyGroups] = useState<Record<string,groupMembersJoinedSchemaT[]>>({});
 
     useEffect(()=>{
         console.log(myGroups);
@@ -15,7 +15,6 @@ export function useUser() {
             getMyGroups(user.id).then(res=>{
                 if (res.data) {
                     setMyGroups(res.data)
-                    console.log(res.data);
                     
                 } else {
                     console.log("my groups data", res);
@@ -25,5 +24,5 @@ export function useUser() {
         }
     },[user])
 
-    return { user, setUser, userLocation, setUserLocation, myGroups };
+    return { user, setUser, userLocation, setUserLocation, myGroups, setMyGroups };
 }
