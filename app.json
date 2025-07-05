@@ -25,7 +25,7 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.sea_rocket_tech.sdgcommanders"
+      "package": "com.sea_rocket_tech.sgkcommanders"
     },
     "web": {
       "bundler": "metro",
@@ -64,7 +64,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "139289a8-38c7-4cda-8bec-8e3817451800"
+        "projectId": "a92d75e4-1673-4579-ba80-8ba93f8c96af"
       }
     },
     "owner": "sea_rocket_tech",
@@ -72,7 +72,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/139289a8-38c7-4cda-8bec-8e3817451800"
+      "url": "https://u.expo.dev/a92d75e4-1673-4579-ba80-8ba93f8c96af"
     }
   }
 }
