@@ -1,7 +1,8 @@
+import useSOS from "@/hooks/useSOS";
 import useToast from "@/hooks/useToast";
 import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/supabase";
-import { getAllSOS, joinedSOSSchemaT } from "@/supabase/sos";
+import { getAllSOS } from "@/supabase/sos";
 import { getUserById } from "@/supabase/users";
 import { userT } from "@/types";
 import { router } from "expo-router";
@@ -11,12 +12,11 @@ import React, {
   PropsWithChildren,
   useContext,
   useEffect,
-  useState,
 } from "react";
 
 type appContextT = {
   userMethods: ReturnType<typeof useUser>;
-  sos: joinedSOSSchemaT[];
+  sosMethods: ReturnType<typeof useSOS>;
 };
 
 const AppContext = createContext<appContextT | null>(null);
@@ -31,9 +31,9 @@ export const useAppContext = () => {
 
 const AppContextProvider: FC<PropsWithChildren> = (props) => {
   const userMethods = useUser();
+  const sosMethods = useSOS();
   const toast = useToast();
   const { user } = userMethods;
-  const [sos, setSos] = useState<joinedSOSSchemaT[]>([]);
 
   useEffect(() => {
     //supabase.auth.signOut();
@@ -60,17 +60,17 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
   }, []);
 
   useEffect(() => {
-    if (!sos.length && user?.is_agent) {
+    if (!sosMethods.sos.length && user?.is_agent) {
       getAllSOS().then((res) => {
         if (res.data && Array.isArray(res.data)) {
-          setSos(res.data);
+          sosMethods.setSos(res.data);
         }
       });
     }
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ userMethods, sos }}>
+    <AppContext.Provider value={{ userMethods, sosMethods }}>
       {props.children}
     </AppContext.Provider>
   );

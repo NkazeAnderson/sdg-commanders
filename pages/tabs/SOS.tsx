@@ -1,3 +1,15 @@
+import {
+  Avatar,
+  AvatarFallbackText,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import {
+  ArrowUpCircle,
+  CircleArrowRight,
+  CircleCheck,
+  ImageIcon,
+} from "lucide-react-native";
+
 import { useAppContext } from "@/components/context/AppContextProvider";
 import Form from "@/components/Form";
 import Gradient from "@/components/Gradient";
@@ -6,27 +18,32 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
+import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
+import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { primaryColors } from "@/constants";
 import { addMessageToSOS, createSOS } from "@/supabase/sos";
 import { sosT, withoutIdT } from "@/types";
 import { getUserLocation } from "@/utils";
+import { ImagePickerAsset } from "expo-image-picker";
+import { router } from "expo-router";
 import { ChevronUp, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
   runOnJS,
+  SlideInDown,
+  SlideOutDown,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 const SOS = () => {
   const rippleScale = useSharedValue(1);
   const rippleOpacity = useSharedValue(0.5);
@@ -36,16 +53,19 @@ const SOS = () => {
   const avatarTopPostion = useSharedValue(0);
   const avatarheight = useSharedValue(0);
   const [message, setMessage] = useState("");
-  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showSendReport, setShowSendReport] = useState(false);
   const sosRef = useRef<View>(null);
   const [sendingSOS, setSendingSOS] = useState(false);
-
   const [newSOSId, setNewSOSId] = useState("");
   const avatarRef = useRef<View>(null);
+  const [reportMessage, setReportMessage] = useState("");
+  const [reportImages, setReportImages] = useState<ImagePickerAsset[]>([]);
+
   const {
     userMethods: { user },
+    sosMethods: { sos, activeSos, setActiveSos },
   } = useAppContext();
-
+  const sosData = activeSos;
   useEffect(() => {
     if (sosRef.current) {
       sosRef.current.measure((x, y, w, h, px, py) => {
@@ -60,20 +80,24 @@ const SOS = () => {
       });
     }
   }, []);
-
   useEffect(() => {
     rippleScale.value = withRepeat(
-      withTiming(2.5, { duration: 2000, easing: Easing.out(Easing.ease) }),
+      withTiming(2.5, {
+        duration: 2000,
+        easing: Easing.out(Easing.ease),
+      }),
       -1,
       false
     );
     rippleOpacity.value = withRepeat(
-      withTiming(0, { duration: 2000, easing: Easing.out(Easing.ease) }),
+      withTiming(0, {
+        duration: 2000,
+        easing: Easing.out(Easing.ease),
+      }),
       -1,
       false
     );
   }, []);
-
   const animatedRippleStyle = useAnimatedStyle(() => ({
     position: "absolute",
     alignSelf: "center",
@@ -82,16 +106,23 @@ const SOS = () => {
     borderRadius: 9999,
     backgroundColor: user?.is_safe
       ? primaryColors["--color-primary-500"]
-      : "red", // Tailwind primary-400
+      : "red",
+    // Tailwind primary-400
     opacity: rippleOpacity.value,
-    transform: [{ scale: rippleScale.value }],
+    transform: [
+      {
+        scale: rippleScale.value,
+      },
+    ],
     zIndex: 0,
   }));
-
   const animatedAvatarPosition = useAnimatedStyle(() => ({
-    transform: [{ translateY: avatarTranslation.value }],
+    transform: [
+      {
+        translateY: avatarTranslation.value,
+      },
+    ],
   }));
-
   const avatarPanGesture = Gesture.Pan()
     .onUpdate((e) => {
       avatarTranslation.value = e.translationY;
@@ -108,13 +139,12 @@ const SOS = () => {
     });
 
   avatarPanGesture.enabled(user?.is_safe ?? true);
-
   function setBottomPosition(value: number) {
     "worklet";
+
     if (sosBottomPostion.value) return;
     sosBottomPostion.value = value;
   }
-
   async function sendSOS() {
     setSendingSOS(true);
     try {
@@ -137,7 +167,113 @@ const SOS = () => {
     }
     setSendingSOS(false);
   }
+  if (user?.is_agent) {
+    if (!sosData) {
+      return (
+        <View className="flex flex-1  bg-primary-950 px-4">
+          <Center className="flex-1 items-center justify-center gap-5">
+            {/* <Box className=" w-10 aspect-square rounded-full flex justify-center items-center">
 
+          </Box> */}
+            <Icon className=" text-success-500 w-10 h-10" as={CircleCheck} />
+            <Text>No Active SOS mission</Text>
+          </Center>
+        </View>
+      );
+    }
+    return (
+      <View className="flex flex-1  bg-primary-950 px-4">
+        <SafeAreaView className="flex-1 gap-4">
+          <Heading size="xl" className=" text-primary-200 text-center py-4">
+            Current SOS Mission
+          </Heading>
+          <ScrollView className=" gap-4">
+            <Center>
+              <Avatar size={"2xl"}>
+                <AvatarFallbackText>{sosData.sent_by.name}</AvatarFallbackText>
+                <AvatarImage
+                  source={{
+                    uri: sosData.sent_by.profile_picture ?? "",
+                  }}
+                />
+              </Avatar>
+              <Heading className=" capitalize my-2 text-typography-0">
+                {sosData.sent_by.name}
+              </Heading>
+            </Center>
+            {Boolean(sosData.message) && (
+              <Box>
+                <Heading className=" text-primary-50">Message</Heading>
+                <Text className=" text-typography-0">{sosData.message}</Text>
+              </Box>
+            )}
+
+            {!showSendReport ? (
+              <HStack className="py-4 " space="lg">
+                <Button
+                  className=" flex-1"
+                  onPress={() => {
+                    router.push("/tabs");
+                  }}
+                >
+                  <ButtonText>Go</ButtonText>
+                  <ButtonIcon as={CircleArrowRight} />
+                </Button>
+                <Button
+                  action="positive"
+                  onPress={() => {
+                    setShowSendReport(true);
+                  }}
+                >
+                  <ButtonText>Mark as resolved</ButtonText>
+                  <ButtonIcon as={CircleCheck} />
+                </Button>
+              </HStack>
+            ) : (
+              <Animated.View entering={SlideInDown} exiting={SlideOutDown}>
+                <Center>
+                  <Button
+                    action="negative"
+                    onPress={() => {
+                      setShowSendReport(false);
+                    }}
+                    className=" aspect-square rounded-full"
+                  >
+                    <ButtonIcon as={X} />
+                  </Button>
+                </Center>
+                <Heading className=" text-primary-50 my-2">Report</Heading>
+                <Form space="lg">
+                  <Textarea>
+                    <TextareaInput
+                      value={reportMessage}
+                      onChangeText={(text) => {
+                        setReportMessage(text);
+                      }}
+                      placeholder="Report message"
+                    />
+                  </Textarea>
+                  <Box className="pr-[30%]">
+                    <Button variant="outline">
+                      <ButtonText>Add Images</ButtonText>
+                      <ButtonIcon as={ImageIcon} />
+                    </Button>
+                  </Box>
+
+                  <Box className=" my-4">
+                    <Button>
+                      <ButtonText>Upload Report</ButtonText>
+                      <ButtonIcon as={ArrowUpCircle} />
+                    </Button>
+                  </Box>
+                </Form>
+              </Animated.View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
   return (
     <>
       <View className="flex flex-1 bg-primary-950 px-4">
@@ -244,7 +380,10 @@ const SOS = () => {
                 className="bg-transparent"
                 onPress={() => {
                   if (newSOSId && message) {
-                    addMessageToSOS({ id: newSOSId, message }).then((res) => {
+                    addMessageToSOS({
+                      id: newSOSId,
+                      message,
+                    }).then((res) => {
                       setNewSOSId("");
                       setMessage("");
                     });
@@ -261,5 +400,4 @@ const SOS = () => {
     </>
   );
 };
-
 export default SOS;

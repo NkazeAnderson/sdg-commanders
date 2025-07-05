@@ -14,7 +14,7 @@ import { groupT } from "@/types";
 import { getUserLocation } from "@/utils";
 import { groupMembersSchema, usersSchema } from "@/zodSchema";
 import { Tabs } from "expo-router";
-import { LayoutDashboard, Settings } from "lucide-react-native";
+import { LayoutDashboard, Settings, Siren } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 
 const cachedGroups: groupT[] = [];
@@ -137,12 +137,16 @@ const _layout = () => {
                   end={{ x: 0.4, y: 0 }}
                 >
                   <Center className="w-full h-full">
-                    <Heading
-                      size={focused ? "md" : "xs"}
-                      className=" text-typography-200"
-                    >
-                      SOS
-                    </Heading>
+                    {user?.is_agent ? (
+                      <Icon className=" text-typography-0" as={Siren} />
+                    ) : (
+                      <Heading
+                        size={focused ? "md" : "xs"}
+                        className=" text-typography-200"
+                      >
+                        SOS
+                      </Heading>
+                    )}
                   </Center>
                 </Gradient>
               </Box>

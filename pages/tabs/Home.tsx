@@ -11,28 +11,31 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
-import { DrawerContent } from "@/components/ui/drawer";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { ThreeDotsIcon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { Bell, MessageCircle, Siren } from "lucide-react-native";
+import {
+  Bell,
+  CircleArrowRight,
+  MessageCircle,
+  Siren,
+} from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapViewDirections from "react-native-maps-directions";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-const AnimatedDrawerContent = Animated.createAnimatedComponent(DrawerContent);
 const Home = () => {
   const [showDrawer, setshowDrawer] = useState(true);
   const { height: windowsHeight } = useWindowDimensions();
   const {
     userMethods: { userLocation, user, myGroups, setUserLocation },
-    sos,
+    sosMethods: { sos, activeSos, setActiveSos },
   } = useAppContext();
   const mapRef = useRef<MapView>(null);
   const markerRef = useRef<MapMarker>(null);
@@ -69,6 +72,21 @@ const Home = () => {
       markerRef.current && markerRef.current.forceUpdate();
     }
   }, [userLocation]);
+
+  useEffect(() => {
+    if (activeSos && userLocation && mapRef.current) {
+      // mapRef.current.animateToRegion(
+      //   {
+      //     ...activeSos.location,
+      //     latitudeDelta: 0.01,
+      //     longitudeDelta: 0.01,
+      //   },
+      //   2000
+      // );
+      markerRef.current && markerRef.current.forceUpdate();
+      mapRef.current.setMapBoundaries(userLocation, activeSos.location);
+    }
+  }, [activeSos]);
 
   // useEffect(() => {
   //   setInterval(() => {
@@ -111,6 +129,39 @@ const Home = () => {
               </Text>
             )}
           </MapMarker>
+
+          <MapMarker
+            className={!activeSos ? " hidden" : ""}
+            ref={markerRef}
+            coordinate={
+              activeSos?.location ?? {
+                latitude: 0,
+                longitude: 0,
+              }
+            }
+          >
+            {activeSos && (
+              <>
+                <MapAvatar
+                  user={activeSos.sent_by}
+                  safe={activeSos.sent_by.is_safe ?? undefined}
+                />
+                {activeSos.sent_by?.is_safe === false && (
+                  <Text size="sm" className="text-red-600">
+                    Not safe!
+                  </Text>
+                )}
+              </>
+            )}
+          </MapMarker>
+
+          <MapViewDirections
+            origin={userLocation}
+            destination={activeSos?.location}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY!}
+            strokeWidth={3}
+            strokeColor={"#567fee"}
+          />
         </MapView>
       </View>
       <View className=" absolute top-12 right-4  ">
@@ -167,34 +218,55 @@ const Home = () => {
             )}
             {user?.is_agent && Boolean(sos.length) && (
               <ScrollView>
-                {sos.map((item) => {
-                  return (
-                    <HStack space="sm" className=" items-center p-2">
-                      <Avatar>
-                        <AvatarFallbackText>
-                          {item.sent_by.name}
-                        </AvatarFallbackText>
-                        <AvatarImage
-                          source={{ uri: item.sent_by.profile_picture ?? "/" }}
-                        />
-                      </Avatar>
-                      <Box className="flex-grow">
-                        <Heading className=" text-typography-100 capitalize">
-                          {item.sent_by.name}
-                        </Heading>
-                        <Text size="sm">{item.message}</Text>
-                      </Box>
-                      <HStack space="sm">
-                        <Button action="positive">
-                          <ButtonIcon as={Siren} />
-                        </Button>
-                        <Button>
-                          <ButtonIcon as={ThreeDotsIcon} />
-                        </Button>
+                {sos
+                  .filter((item) => {
+                    if (activeSos) {
+                      return activeSos.id === item.id;
+                    }
+                    return true;
+                  })
+                  .map((item) => {
+                    return (
+                      <HStack
+                        key={item.id}
+                        space="sm"
+                        className=" items-center p-2"
+                      >
+                        <Avatar>
+                          <AvatarFallbackText>
+                            {item.sent_by.name}
+                          </AvatarFallbackText>
+                          <AvatarImage
+                            source={{
+                              uri: item.sent_by.profile_picture ?? "/",
+                            }}
+                          />
+                        </Avatar>
+                        <Box className="flex-grow">
+                          <Heading className=" text-typography-100 capitalize">
+                            {item.sent_by.name}
+                          </Heading>
+                          <Text size="sm">{item.message}</Text>
+                        </Box>
+                        <HStack space="sm">
+                          <Button
+                            action={
+                              activeSos && activeSos.id === item.id
+                                ? "positive"
+                                : "primary"
+                            }
+                            onPress={() => {
+                              setActiveSos(item);
+                            }}
+                          >
+                            <ButtonIcon
+                              as={activeSos ? CircleArrowRight : Siren}
+                            />
+                          </Button>
+                        </HStack>
                       </HStack>
-                    </HStack>
-                  );
-                })}
+                    );
+                  })}
               </ScrollView>
             )}
           </ScrollView>
