@@ -8,6 +8,7 @@ import {
   CircleArrowRight,
   CircleCheck,
   ImageIcon,
+  Trash2,
 } from "lucide-react-native";
 
 import { useAppContext } from "@/components/context/AppContextProvider";
@@ -15,18 +16,25 @@ import Form from "@/components/Form";
 import Gradient from "@/components/Gradient";
 import MapAvatar from "@/components/MapAvatar";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import {
+  Button,
+  ButtonIcon,
+  ButtonSpinner,
+  ButtonText,
+} from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
+import { Image } from "@/components/ui/image";
 import { Modal } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { primaryColors } from "@/constants";
-import { addMessageToSOS, createSOS } from "@/supabase/sos";
+import { uploadBase64ImageToSupabase } from "@/supabase/pictures";
+import { addMessageToSOS, createSOS, resolveSOS } from "@/supabase/sos";
 import { sosT, withoutIdT } from "@/types";
-import { getUserLocation } from "@/utils";
+import { getImageFromGallery, getUserLocation } from "@/utils";
 import { ImagePickerAsset } from "expo-image-picker";
 import { router } from "expo-router";
 import { ChevronUp, Send, X } from "lucide-react-native";
@@ -60,10 +68,11 @@ const SOS = () => {
   const avatarRef = useRef<View>(null);
   const [reportMessage, setReportMessage] = useState("");
   const [reportImages, setReportImages] = useState<ImagePickerAsset[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     userMethods: { user },
-    sosMethods: { sos, activeSos, setActiveSos },
+    sosMethods: { sos, activeSos, lastSosResponse, setLastSosResponse },
   } = useAppContext();
   const sosData = activeSos;
   useEffect(() => {
@@ -167,6 +176,46 @@ const SOS = () => {
     }
     setSendingSOS(false);
   }
+  async function addImages() {
+    const image = await getImageFromGallery();
+    image && setReportImages((prev) => [image, ...prev]);
+  }
+
+  function removeImages(image: ImagePickerAsset) {
+    setReportImages((prev) => prev.filter((item) => item.uri !== image.uri));
+  }
+
+  async function sendReport() {
+    setSubmitting(true);
+
+    const imagesUrl: string[] = [];
+    for (let image of reportImages) {
+      const url = await uploadBase64ImageToSupabase(image);
+      console.log(url);
+
+      imagesUrl.push(url);
+    }
+
+    if (!lastSosResponse) {
+      setSubmitting(false);
+      throw new Error("lastSOSResponse Required");
+    }
+    const res = await resolveSOS({
+      ...lastSosResponse,
+      description: reportMessage,
+      images: imagesUrl,
+    });
+    setSubmitting(false);
+    if (!res.some((item) => item.error)) {
+      setReportMessage("");
+      setReportImages([]);
+      setLastSosResponse(undefined);
+      setShowSendReport(false);
+    } else {
+      console.log(res);
+    }
+  }
+
   if (user?.is_agent) {
     if (!sosData) {
       return (
@@ -253,17 +302,41 @@ const SOS = () => {
                       placeholder="Report message"
                     />
                   </Textarea>
+
+                  {reportImages.map((item, index) => (
+                    <Box className="w-full relative aspect-square" key={index}>
+                      <Image
+                        className="w-full h-full border  rounded-xl"
+                        source={{ uri: item.uri }}
+                        alt="incident images"
+                      />
+                      <Button
+                        action="negative"
+                        className=" absolute bottom-4 right-4"
+                        onPress={() => {
+                          removeImages(item);
+                        }}
+                      >
+                        <ButtonIcon as={Trash2} />
+                      </Button>
+                    </Box>
+                  ))}
+
                   <Box className="pr-[30%]">
-                    <Button variant="outline">
-                      <ButtonText>Add Images</ButtonText>
+                    <Button variant="outline" onPress={addImages}>
+                      <ButtonText>Add Image</ButtonText>
                       <ButtonIcon as={ImageIcon} />
                     </Button>
                   </Box>
 
                   <Box className=" my-4">
-                    <Button>
+                    <Button onPress={sendReport}>
                       <ButtonText>Upload Report</ButtonText>
-                      <ButtonIcon as={ArrowUpCircle} />
+                      {submitting ? (
+                        <ButtonSpinner />
+                      ) : (
+                        <ButtonIcon as={ArrowUpCircle} />
+                      )}
                     </Button>
                   </Box>
                 </Form>

@@ -62,8 +62,7 @@ export const getImageFromGallery = async ()=>{
     }
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      aspect: [4, 3],
-      quality: 1
+      aspect: [4, 3]
     });
     return result.assets ? result.assets[0] : null
 }

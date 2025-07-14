@@ -17,7 +17,8 @@ export const usersTable = pgTable(tables.users, {
   created_at:timestamp({mode:"string"}).defaultNow().notNull(),
   is_safe:boolean().default(true),
   is_agent:boolean().default(false).notNull(), 
-  profile_picture:varchar()
+  profile_picture:varchar(),
+  deviceIds:varchar().array(),
 });
 
 export const GroupsTable = pgTable(tables.groups,{
@@ -51,8 +52,8 @@ export const SOSResponsesTable = pgTable(tables.sos_responses,{
   id:uuid().notNull().primaryKey().defaultRandom(),
   sos: uuid().references(() => SOSTable.id).notNull(),
   response_by: uuid().notNull().references(()=>usersTable.id, {onDelete:"cascade"}),
-  description:varchar().notNull(),
-  images:varchar().array().notNull(),
+  description:varchar(),
+  images:varchar().array(),
   created_at: timestamp({mode:"string"}).defaultNow().notNull()
 })
 
@@ -66,4 +67,18 @@ export const AgentDutiesTable = pgTable(tables.agent_duty,{
   end_time:time().notNull(),
   active:boolean().default(true).notNull(),
   created_at:timestamp({mode:"string"}).defaultNow(),
+})
+
+export const MessagesTable = pgTable(tables.messages, {
+  id: uuid().primaryKey().defaultRandom(),
+  text:varchar().notNull(),
+  sentTo:uuid().references(() => usersTable.id, {onDelete:"cascade"}).notNull(),
+  sentBy:uuid().references(() => usersTable.id, {onDelete:"cascade"}).notNull(),
+  created_at:timestamp({mode:"string"}).defaultNow(),
+})
+
+export const NotificationsTable = pgTable(tables.notifications, {
+  id: uuid().primaryKey().defaultRandom(),
+  text:varchar().notNull(),
+  userId:uuid().references(() => usersTable.id, {onDelete:"cascade"}).notNull(),
 })

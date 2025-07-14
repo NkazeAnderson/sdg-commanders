@@ -1,8 +1,10 @@
+import useMessage from "@/hooks/useMessage";
 import useSOS from "@/hooks/useSOS";
 import useToast from "@/hooks/useToast";
 import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/supabase";
-import { getAllSOS } from "@/supabase/sos";
+import { getMessages } from "@/supabase/messages";
+import { getAllSOS, getMyLastResponse } from "@/supabase/sos";
 import { getUserById } from "@/supabase/users";
 import { userT } from "@/types";
 import { router } from "expo-router";
@@ -17,6 +19,7 @@ import React, {
 type appContextT = {
   userMethods: ReturnType<typeof useUser>;
   sosMethods: ReturnType<typeof useSOS>;
+  messagesMethods: ReturnType<typeof useMessage>;
 };
 
 const AppContext = createContext<appContextT | null>(null);
@@ -32,6 +35,7 @@ export const useAppContext = () => {
 const AppContextProvider: FC<PropsWithChildren> = (props) => {
   const userMethods = useUser();
   const sosMethods = useSOS();
+  const messagesMethods = useMessage();
   const toast = useToast();
   const { user } = userMethods;
 
@@ -67,10 +71,30 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
         }
       });
     }
+    if (user?.is_agent) {
+      getMyLastResponse(user.id)
+        .then((res) => {
+          res.data ? sosMethods.setLastSosResponse(res.data) : console.log(res);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    }
+    if (user && !messagesMethods.messages.length) {
+      getMessages(user)
+        .then((res) => {
+          console.log(res);
+
+          res.data &&
+            Array.isArray(res.data) &&
+            messagesMethods.setMessages(res.data);
+        })
+        .catch((e) => {});
+    }
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ userMethods, sosMethods }}>
+    <AppContext.Provider value={{ userMethods, sosMethods, messagesMethods }}>
       {props.children}
     </AppContext.Provider>
   );

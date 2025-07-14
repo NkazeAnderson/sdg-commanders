@@ -15,6 +15,9 @@ import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { addSOSResponse, joinedSOSSchemaT } from "@/supabase/sos";
+import { sosResponseT, withoutIdT } from "@/types";
+import { Link, router } from "expo-router";
 import {
   Bell,
   CircleArrowRight,
@@ -22,7 +25,12 @@ import {
   Siren,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import {
+  ScrollView,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import MapView, { MapMarker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -35,11 +43,13 @@ const Home = () => {
   const { height: windowsHeight } = useWindowDimensions();
   const {
     userMethods: { userLocation, user, myGroups, setUserLocation },
-    sosMethods: { sos, activeSos, setActiveSos },
+    sosMethods: { sos, activeSos, setActiveSos, setLastSosResponse },
+    messagesMethods: { messages },
   } = useAppContext();
   const mapRef = useRef<MapView>(null);
   const markerRef = useRef<MapMarker>(null);
   const height = useSharedValue(windowsHeight / 4);
+  const [submitting, setSubmitting] = useState(false);
   const animatedSliderStyles = useAnimatedStyle(() => {
     return {
       height: height.value,
@@ -99,6 +109,18 @@ const Home = () => {
   // }, []);
 
   const groupsKeys = !myGroups ? [] : Object.keys(myGroups);
+  const unreadMessages = messages.filter((item) => item.unread);
+
+  async function interveneSOS(
+    sosResponse: withoutIdT<sosResponseT>,
+    sos: joinedSOSSchemaT
+  ) {
+    setSubmitting(true);
+    const res = await addSOSResponse(sosResponse);
+    setActiveSos(sos);
+    setLastSosResponse(res.data);
+    setSubmitting(false);
+  }
 
   return (
     <Box className=" flex-1 relative">
@@ -166,23 +188,32 @@ const Home = () => {
       </View>
       <View className=" absolute top-12 right-4  ">
         <HStack space="lg" className=" justify-end items-center">
-          <Button
-            size="lg"
-            className=" bg-primary-950 rounded-full aspect-square relative"
-          >
-            <ButtonIcon as={MessageCircle} />
-            <Box className="absolute -right-1 top-0 aspect-square w-3 rounded-full p-0.5 bg-error-700">
-              <Text size="xs" className="text-white leading-none text-center">
-                1
-              </Text>
-            </Box>
-          </Button>
-          <Button
-            size="lg"
-            className=" bg-primary-950 rounded-full aspect-square"
-          >
-            <ButtonIcon as={Bell} />
-          </Button>
+          <Link href={"/stacks/messages"} asChild>
+            <Button
+              size="lg"
+              className=" bg-primary-950 rounded-full aspect-square relative"
+            >
+              <ButtonIcon as={MessageCircle} />
+              {Boolean(unreadMessages.length) && (
+                <Box className="absolute -right-1 top-0 aspect-square w-3 rounded-full p-0.5 bg-error-700">
+                  <Text
+                    size="xs"
+                    className="text-white leading-none text-center"
+                  >
+                    {unreadMessages.length}
+                  </Text>
+                </Box>
+              )}
+            </Button>
+          </Link>
+          <Link href={"/stacks/notifications"} asChild>
+            <Button
+              size="lg"
+              className=" bg-primary-950 rounded-full aspect-square"
+            >
+              <ButtonIcon as={Bell} />
+            </Button>
+          </Link>
         </HStack>
       </View>
       <View className=" w-full bg-primary-950  border-0  absolute bottom-0 rounded-t-3xl">
@@ -227,44 +258,54 @@ const Home = () => {
                   })
                   .map((item) => {
                     return (
-                      <HStack
+                      <TouchableOpacity
                         key={item.id}
-                        space="sm"
-                        className=" items-center p-2"
+                        onPress={() => {
+                          router.push("/tabs/sos");
+                        }}
                       >
-                        <Avatar>
-                          <AvatarFallbackText>
-                            {item.sent_by.name}
-                          </AvatarFallbackText>
-                          <AvatarImage
-                            source={{
-                              uri: item.sent_by.profile_picture ?? "/",
-                            }}
-                          />
-                        </Avatar>
-                        <Box className="flex-grow">
-                          <Heading className=" text-typography-100 capitalize">
-                            {item.sent_by.name}
-                          </Heading>
-                          <Text size="sm">{item.message}</Text>
-                        </Box>
-                        <HStack space="sm">
-                          <Button
-                            action={
-                              activeSos && activeSos.id === item.id
-                                ? "positive"
-                                : "primary"
-                            }
-                            onPress={() => {
-                              setActiveSos(item);
-                            }}
-                          >
-                            <ButtonIcon
-                              as={activeSos ? CircleArrowRight : Siren}
+                        <HStack space="sm" className=" items-center p-2">
+                          <Avatar>
+                            <AvatarFallbackText>
+                              {item.sent_by.name}
+                            </AvatarFallbackText>
+                            <AvatarImage
+                              source={{
+                                uri: item.sent_by.profile_picture ?? "/",
+                              }}
                             />
-                          </Button>
+                          </Avatar>
+                          <Box className="flex-grow">
+                            <Heading className=" text-typography-100 capitalize">
+                              {item.sent_by.name}
+                            </Heading>
+                            <Text size="sm">{item.message}</Text>
+                          </Box>
+                          <HStack space="sm">
+                            <Button
+                              action={
+                                activeSos && activeSos.id === item.id
+                                  ? "positive"
+                                  : "primary"
+                              }
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                interveneSOS(
+                                  {
+                                    sos: item.id!,
+                                    response_by: user.id!,
+                                  },
+                                  item
+                                );
+                              }}
+                            >
+                              <ButtonIcon
+                                as={activeSos ? CircleArrowRight : Siren}
+                              />
+                            </Button>
+                          </HStack>
                         </HStack>
-                      </HStack>
+                      </TouchableOpacity>
                     );
                   })}
               </ScrollView>
