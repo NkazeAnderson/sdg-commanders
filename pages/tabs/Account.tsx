@@ -16,7 +16,6 @@ import { VStack } from "@/components/ui/vstack";
 import { supabase } from "@/supabase";
 import { Link } from "expo-router";
 import {
-  Car,
   ChevronRight,
   CircleUserRound,
   Copy,
@@ -101,28 +100,19 @@ const Account = () => {
               </HStack>
             </TouchableOpacity>
           </Link>
-          <TouchableOpacity>
-            <HStack space="md" className=" items-center justify-between py-4">
-              <HStack space="xl" className="items-center ">
-                <Icon className="text-primary-600 w-8 h-8" as={Car} />
-                <Text size="lg" className="text-typography-100 font-medium ">
-                  Rides
-                </Text>
+          <Link href={"/stacks/subscriptions"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon className="text-primary-600 w-8 h-8" as={DollarSign} />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Subscription
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
               </HStack>
-              <Icon className="text-typography-400" as={ChevronRight} />
-            </HStack>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <HStack space="md" className=" items-center justify-between py-4">
-              <HStack space="xl" className="items-center ">
-                <Icon className="text-primary-600 w-8 h-8" as={DollarSign} />
-                <Text size="lg" className="text-typography-100 font-medium ">
-                  Subscription
-                </Text>
-              </HStack>
-              <Icon className="text-typography-400" as={ChevronRight} />
-            </HStack>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Link>
 
           <TouchableOpacity onPress={logOut}>
             <HStack space="md" className=" items-center justify-between py-4">

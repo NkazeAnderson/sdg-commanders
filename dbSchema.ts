@@ -1,9 +1,16 @@
-import { boolean, integer, json, pgTable, time, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, integer, json, pgTable, time, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { tables } from "./constants";
 
 // const userRolesEnum = pgEnum('user_roles', userRoles);
 
 const locationObject = json().$type<{longitude:number, latitude:number}>()
+
+const subscriptionsTable=pgTable(tables.subscriptions, {
+   id: uuid().notNull().primaryKey(),
+   name:varchar({ length: 50 }).notNull(),
+   price:integer().notNull(),
+   maximumSubAccounts:integer().notNull(),
+})
 
 export const usersTable = pgTable(tables.users, {
   id: uuid().notNull().primaryKey(),
@@ -19,6 +26,8 @@ export const usersTable = pgTable(tables.users, {
   is_agent:boolean().default(false).notNull(), 
   profile_picture:varchar(),
   deviceIds:varchar().array(),
+  subcription: uuid().notNull().references(() => subscriptionsTable.id),
+  subcriptionExpiration:date().notNull().defaultNow()
 });
 
 export const GroupsTable = pgTable(tables.groups,{
