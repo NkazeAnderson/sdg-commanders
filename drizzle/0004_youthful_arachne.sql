@@ -4,6 +4,13 @@ CREATE TABLE "notifications" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "subscriptions" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"name" varchar(50) NOT NULL,
+	"price" integer NOT NULL,
+	"maximumSubAccounts" integer NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "deviceIds" varchar[];--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "subcription" uuid NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "subcriptionExpiration" date DEFAULT now() NOT NULL;--> statement-breakpoint

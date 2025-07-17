@@ -5,11 +5,12 @@ import { tables } from "./constants";
 
 const locationObject = json().$type<{longitude:number, latitude:number}>()
 
-const subscriptionsTable=pgTable(tables.subscriptions, {
-   id: uuid().notNull().primaryKey(),
+export const subscriptionsTable=pgTable(tables.subscriptions, {
+   id: uuid().notNull().primaryKey().defaultRandom(),
    name:varchar({ length: 50 }).notNull(),
    price:integer().notNull(),
    maximumSubAccounts:integer().notNull(),
+   is_defualt:boolean()
 })
 
 export const usersTable = pgTable(tables.users, {
@@ -27,7 +28,7 @@ export const usersTable = pgTable(tables.users, {
   profile_picture:varchar(),
   deviceIds:varchar().array(),
   subcription: uuid().notNull().references(() => subscriptionsTable.id),
-  subcriptionExpiration:date().notNull().defaultNow()
+  subcriptionExpiration:date({mode:"string"}).notNull().defaultNow()
 });
 
 export const GroupsTable = pgTable(tables.groups,{

@@ -34,7 +34,11 @@ import { useForm } from "react-hook-form";
 import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
-const schema = usersSchema.omit({ id: true });
+const schema = usersSchema.omit({
+  id: true,
+  subcription: true,
+  subcriptionExpiration: true,
+});
 const SignUp = () => {
   const { phone, groupId } = useLocalSearchParams<{
     phone?: string;
@@ -48,7 +52,9 @@ const SignUp = () => {
     reset,
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { phone: phone ? parseInt(phone) : undefined },
+    defaultValues: {
+      phone: phone ? parseInt(phone) : undefined,
+    },
   });
   const [userMode, setUserMode] = useState<userModesT>(userModes[0]);
   const password = "123456789"; //Math.random().toString(36).slice(-8); // Generate a random password

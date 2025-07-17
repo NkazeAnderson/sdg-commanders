@@ -1,6 +1,6 @@
 {
-  "id": "80943e6c-c296-4c8b-a174-8f129c5ec45c",
-  "prevId": "07da823a-626e-43ce-96e1-3c4fc00f4f95",
+  "id": "e35f3c2f-7f2b-4616-bee5-e4abadbaabd1",
+  "prevId": "80943e6c-c296-4c8b-a174-8f129c5ec45c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -514,6 +514,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "is_defualt": {
+          "name": "is_defualt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
