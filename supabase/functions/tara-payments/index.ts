@@ -8,7 +8,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const url = "https://www.dklo.co/api/tara/order"
 const urlMOMOCM = "https://www.dklo.co/api/tara/cmmobile"
-const webHookUrl = "https://webhook.site/fd991dda-0624-4c0c-bdb8-a8675eaf672a"
+const webHookUrl = Deno.env.get("WEBHOOKURL") 
 const apiKey= Deno.env.get("TARASANDBOXKEY")
 const businessId = Deno.env.get("TARABUSINESSID")
 
