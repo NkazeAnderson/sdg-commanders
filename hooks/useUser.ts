@@ -9,9 +9,7 @@ export function useUser() {
     const [myGroups, setMyGroups] = useState<Record<string,groupMembersJoinedSchemaT[]>>({});
 
     useEffect(()=>{
-        console.log(myGroups);
-        
-        if (user ) {
+       if (user ) {
             getMyGroups(user.id).then(res=>{
                 if (res.data) {
                     setMyGroups(res.data)

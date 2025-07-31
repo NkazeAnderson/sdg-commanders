@@ -1,16 +1,18 @@
-import { boolean, date, integer, json, pgTable, time, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, integer, json, pgEnum, pgTable, time, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { tables } from "./constants";
 
 // const userRolesEnum = pgEnum('user_roles', userRoles);
 
-const locationObject = json().$type<{longitude:number, latitude:number}>()
+export const SubscriptionGroupsEnum= pgEnum("subcription_groups", ["individuals", "groups", "organisations"])
+export const PaymentStatusEnum= pgEnum("payment_status", ["pending", "failed", "success"])
 
-export const subscriptionsTable=pgTable(tables.subscriptions, {
+export const SubscriptionsTable=pgTable(tables.subscriptions, {
    id: uuid().notNull().primaryKey().defaultRandom(),
    name:varchar({ length: 50 }).notNull(),
    price:integer().notNull(),
    maximumSubAccounts:integer().notNull(),
-   is_defualt:boolean()
+   is_defualt:boolean(),
+   for: SubscriptionGroupsEnum().default("individuals").notNull()
 })
 
 export const usersTable = pgTable(tables.users, {
@@ -27,7 +29,7 @@ export const usersTable = pgTable(tables.users, {
   is_agent:boolean().default(false).notNull(), 
   profile_picture:varchar(),
   deviceIds:varchar().array(),
-  subcription: uuid().notNull().references(() => subscriptionsTable.id),
+  subcription: uuid().notNull().references(() => SubscriptionsTable.id),
   subcriptionExpiration:date({mode:"string"}).notNull().defaultNow()
 });
 
@@ -35,7 +37,9 @@ export const GroupsTable = pgTable(tables.groups,{
   id:uuid().notNull().primaryKey().defaultRandom(),
   admin_id: uuid().notNull().references(() => usersTable.id),
   is_organisation:boolean().notNull().default(false),
-  name:varchar().notNull()
+  name:varchar().notNull(),
+  subcription: uuid().references(() => SubscriptionsTable.id),
+  subcriptionExpiration:date({mode:"string"}).defaultNow()
 })
 
 export const GroupMembersTable = pgTable(tables.group_members, {
@@ -44,7 +48,8 @@ export const GroupMembersTable = pgTable(tables.group_members, {
   member_id:uuid().references(() => usersTable.id),
   role:varchar({length:50}).notNull(),
   invitation_accepted: boolean(),
-  created_at: timestamp({mode:"string"}).defaultNow() // to be used for cron job
+  created_at: timestamp({mode:"string"}).defaultNow(), // to be used for cron job
+
 })
 
 
@@ -91,4 +96,16 @@ export const NotificationsTable = pgTable(tables.notifications, {
   id: uuid().primaryKey().defaultRandom(),
   text:varchar().notNull(),
   userId:uuid().references(() => usersTable.id, {onDelete:"cascade"}).notNull(),
+})
+
+export const PaymentsTable = pgTable(tables.payments, {
+  id: uuid().primaryKey().defaultRandom(),
+  subscription:uuid().references(()=>SubscriptionsTable.id, {onDelete:"set null"}).notNull(),
+  by:uuid().references(()=>usersTable.id, {onDelete:"set null"}).notNull(),
+  amount:integer().notNull(),
+  phone:integer(),
+  status:PaymentStatusEnum().default("pending"),
+  date:timestamp({mode:"string"}).notNull().defaultNow(),
+  months:integer().notNull().default(1),
+  group:uuid().references(()=>GroupsTable.id, {onDelete:"set null"})
 })

@@ -50,6 +50,48 @@
       "when": 1752712205892,
       "tag": "0006_rainy_edwin_jarvis",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753889925580,
+      "tag": "0007_melted_human_fly",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753919244232,
+      "tag": "0008_black_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1753919800953,
+      "tag": "0009_shallow_zaladane",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1753920527554,
+      "tag": "0010_aspiring_ender_wiggin",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1753921089076,
+      "tag": "0011_lyrical_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1753924937528,
+      "tag": "0012_broken_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

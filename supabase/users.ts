@@ -6,8 +6,6 @@ import { supabase } from ".";
 
 const userTableRef = supabase.from(tables.users)
 
-
-
 export async function createUser(user:userT ) {
    return await userTableRef.insert(user)
 }

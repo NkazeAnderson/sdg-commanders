@@ -24,8 +24,12 @@ export const userModes = ["Individual", "Agent", "Organisation"] as const
 
 export const userRoles = ["general", "agent", "admin", "staff"] as const
 
-export const tables = {users:"users", groups:"groups", "group_members":"group_members", "sos":"sos","sos_responses":"sos_responses", "agent_duty":"agent_duty", group_member_invites:"group_member_invites", messages:"messages", notifications:"notifications", subscriptions:"subscriptions"  } as const
+export const tables = {users:"users", groups:"groups", "group_members":"group_members", "sos":"sos","sos_responses":"sos_responses", "agent_duty":"agent_duty", group_member_invites:"group_member_invites", messages:"messages", notifications:"notifications", subscriptions:"subscriptions", payments:"payments"  } as const
 
 export const days = ["monday", "tuesday", "wednesday", "thursday", "saturday", "sunday"] as const
 
 export const storageBuckets = {public: "public-media"} as const
+
+export const taraPaymentApps = [ "whatsappLink", "telegramLink", "dikaloLink" ] as const
+
+export const defaultCustomerSupportAgent:string | undefined = "89604346-2b5b-4d97-b4a3-1ed049828a40"

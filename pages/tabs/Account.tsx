@@ -20,6 +20,7 @@ import {
   CircleUserRound,
   Copy,
   DollarSign,
+  FileText,
   LogOut,
   Users,
 } from "lucide-react-native";
@@ -106,7 +107,20 @@ const Account = () => {
                 <HStack space="xl" className="items-center ">
                   <Icon className="text-primary-600 w-8 h-8" as={DollarSign} />
                   <Text size="lg" className="text-typography-100 font-medium ">
-                    Subscription
+                    Subscriptions
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
+              </HStack>
+            </TouchableOpacity>
+          </Link>
+          <Link href={"./"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon className="text-primary-600 w-8 h-8" as={FileText} />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Payment history
                   </Text>
                 </HStack>
                 <Icon className="text-typography-400" as={ChevronRight} />

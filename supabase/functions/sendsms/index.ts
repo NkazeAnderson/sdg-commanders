@@ -5,11 +5,19 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-console.log("Hello from Functions!")
+const TWILIO_ACCOUNT_ID = Deno.env.get("TWILIO_ACCOUNT_ID");
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
+
 
 Deno.serve(async (req) => {
+  //implement trottling
+  if(req.method === "GET"){
+    return new Response(JSON.stringify({"hello":"world"}))
+  }
   try {
     const { phone, message } = await req.json();
+    console.log({phone, message})
     if (!phone || typeof phone !== "string" || phone.length !== 9) {
       return new Response(
         JSON.stringify({ error: "Phone number must be a string of 9 digits." }),
@@ -24,10 +32,8 @@ Deno.serve(async (req) => {
     }
 
     // Twilio credentials from environment variables
-    const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
-    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+ 
+    if (!TWILIO_ACCOUNT_ID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
       return new Response(
         JSON.stringify({ error: "Twilio credentials are not set." }),
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -35,16 +41,16 @@ Deno.serve(async (req) => {
     }
 
     // Format phone number (assuming country code +XXX, adjust as needed)
-    const toPhone = `+XXX${phone}`; // Replace +XXX with your country code
+    const toPhone = `+237${phone}`; 
 
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_ID}/Messages.json`;
     const body = new URLSearchParams({
       To: toPhone,
       From: TWILIO_FROM_NUMBER,
       Body: message,
     });
 
-    const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+    const auth = btoa(`${TWILIO_ACCOUNT_ID}:${TWILIO_AUTH_TOKEN}`);
     const twilioRes = await fetch(url, {
       method: "POST",
       headers: {
@@ -69,7 +75,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: "Invalid request", details: err.message }),
+      JSON.stringify({ error: "Invalid request", details: err }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }

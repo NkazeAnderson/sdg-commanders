@@ -5,8 +5,9 @@ import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/supabase";
 import { getMessages } from "@/supabase/messages";
 import { getAllSOS, getMyLastResponse } from "@/supabase/sos";
+import { getSubscriptions } from "@/supabase/subscriptions";
 import { getUserById } from "@/supabase/users";
-import { userT } from "@/types";
+import { subscriptionT, userT } from "@/types";
 import { router } from "expo-router";
 import React, {
   createContext,
@@ -14,12 +15,14 @@ import React, {
   PropsWithChildren,
   useContext,
   useEffect,
+  useState,
 } from "react";
 
 type appContextT = {
   userMethods: ReturnType<typeof useUser>;
   sosMethods: ReturnType<typeof useSOS>;
   messagesMethods: ReturnType<typeof useMessage>;
+  subscriptions: subscriptionT[];
 };
 
 const AppContext = createContext<appContextT | null>(null);
@@ -33,6 +36,7 @@ export const useAppContext = () => {
 };
 
 const AppContextProvider: FC<PropsWithChildren> = (props) => {
+  const [subscriptions, setSubscriptions] = useState<subscriptionT[]>([]);
   const userMethods = useUser();
   const sosMethods = useSOS();
   const messagesMethods = useMessage();
@@ -51,6 +55,11 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
             router.push("/tabs");
           } else if (error) {
             console.log(error);
+          }
+        });
+        getSubscriptions().then((res) => {
+          if (Array.isArray(res.data)) {
+            setSubscriptions(res.data);
           }
         });
       }
@@ -94,7 +103,9 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ userMethods, sosMethods, messagesMethods }}>
+    <AppContext.Provider
+      value={{ userMethods, sosMethods, messagesMethods, subscriptions }}
+    >
       {props.children}
     </AppContext.Provider>
   );

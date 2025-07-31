@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/avatar";
 
 import { Box } from "@/components/ui/box";
-import { Button, ButtonIcon } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
@@ -23,6 +23,7 @@ import {
   CircleArrowRight,
   MessageCircle,
   Siren,
+  Users,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -232,8 +233,12 @@ const Home = () => {
           className="bg-primary-900/10 "
           style={animatedSliderStyles}
         >
-          <Heading size="md" className=" text-typography-100 p-2">
-            {user?.is_agent ? "SOS List" : "Member Groups"}
+          <Heading size="md" className=" text-typography-100 p-2 capitalize">
+            {user?.is_agent
+              ? "SOS List"
+              : Boolean(groupsKeys.length)
+              ? "Groups & Members"
+              : ""}
           </Heading>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -246,6 +251,21 @@ const Home = () => {
                   return <GroupMembersList key={item} members={members} />;
                 })}
               </ScrollView>
+            )}
+            {!Boolean(groupsKeys.length) && !user?.is_agent && (
+              <Center className=" gap-4">
+                <Box className=" w-full">
+                  <Heading className=" text-primary-500 capitalize text-center">
+                    {user?.name}
+                  </Heading>
+                </Box>
+                <Link href={"/stacks/members"} asChild>
+                  <Button>
+                    <ButtonIcon as={Users} />
+                    <ButtonText>Add Family Members</ButtonText>
+                  </Button>
+                </Link>
+              </Center>
             )}
             {user?.is_agent && Boolean(sos.length) && (
               <ScrollView>
