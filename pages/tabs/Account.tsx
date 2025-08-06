@@ -22,6 +22,7 @@ import {
   DollarSign,
   FileText,
   LogOut,
+  MessageCircleQuestion,
   Users,
 } from "lucide-react-native";
 import React, { useState } from "react";
@@ -94,7 +95,7 @@ const Account = () => {
                 <HStack space="xl" className="items-center ">
                   <Icon className="text-primary-600 w-8 h-8" as={Users} />
                   <Text size="lg" className="text-typography-100 font-medium ">
-                    Members
+                    Groups & Families
                   </Text>
                 </HStack>
                 <Icon className="text-typography-400" as={ChevronRight} />
@@ -114,13 +115,29 @@ const Account = () => {
               </HStack>
             </TouchableOpacity>
           </Link>
-          <Link href={"./"} asChild>
+          <Link href={"/stacks/payment-history"} asChild>
             <TouchableOpacity>
               <HStack space="md" className=" items-center justify-between py-4">
                 <HStack space="xl" className="items-center ">
                   <Icon className="text-primary-600 w-8 h-8" as={FileText} />
                   <Text size="lg" className="text-typography-100 font-medium ">
                     Payment history
+                  </Text>
+                </HStack>
+                <Icon className="text-typography-400" as={ChevronRight} />
+              </HStack>
+            </TouchableOpacity>
+          </Link>
+          <Link href={"/stacks/messages"} asChild>
+            <TouchableOpacity>
+              <HStack space="md" className=" items-center justify-between py-4">
+                <HStack space="xl" className="items-center ">
+                  <Icon
+                    className="text-primary-600 w-8 h-8"
+                    as={MessageCircleQuestion}
+                  />
+                  <Text size="lg" className="text-typography-100 font-medium ">
+                    Contact Support
                   </Text>
                 </HStack>
                 <Icon className="text-typography-400" as={ChevronRight} />

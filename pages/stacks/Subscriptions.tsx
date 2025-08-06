@@ -23,14 +23,15 @@ import { groupT, paymentT } from "@/types";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Href, router, useLocalSearchParams } from "expo-router";
 import { CreditCard, Phone } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ScrollView } from "react-native";
 
 const Subscriptions = () => {
-  const { groupId, userId } = useLocalSearchParams<{
+  const { groupId, userId, action } = useLocalSearchParams<{
     groupId?: string;
     userId?: string;
+    action?: "renew" | "upgrade";
   }>();
   const [showDrawer, setShowDrawer] = useState(false);
   const [payWith, setPaywith] = useState<"phone" | "card">("phone");
@@ -42,11 +43,19 @@ const Subscriptions = () => {
   const {
     control,
     setValue,
+    watch,
     formState: { isSubmitting },
     handleSubmit,
   } = useForm<Omit<paymentT, "id" | "by" | "date" | "status" | "amount">>({
     defaultValues: { group: groupId, months: 1 },
   });
+
+  const months = watch("months");
+
+  const selectedSubscriptionId = watch("subscription");
+  const selectedSubscription = subscriptions.find(
+    (item) => item.id === selectedSubscriptionId
+  );
 
   const groupKeys = Object.keys(myGroups);
 
@@ -58,6 +67,11 @@ const Subscriptions = () => {
         item.subcription &&
         item.subcriptionExpiration
     );
+  const targetGroup = adminGroups.find((item) => item.id === groupId);
+  const targetSubscription = subscriptions.find(
+    (item) => item.id === targetGroup?.subcription
+  );
+
   const submitting = useRef(false);
 
   async function submit(data: any) {
@@ -84,13 +98,30 @@ const Subscriptions = () => {
     setShowDrawer(false);
   }
 
+  useEffect(() => {
+    console.log(action, targetSubscription);
+
+    if (action == "renew" && targetSubscription?.id) {
+      setValue("subscription", targetSubscription.id);
+      setShowDrawer(true);
+    }
+  }, [targetSubscription, action]);
+
   return (
     <>
       <ScrollView className=" flex-1 bg-primary-950 p-4 gap-4">
         {groupId || userId ? (
           subscriptions
             .filter((item) =>
-              groupId ? item.for === "groups" : item.for === "individuals"
+              targetSubscription && action === "upgrade"
+                ? item.for === "groups" &&
+                  item.maximumSubAccounts >
+                    targetSubscription.maximumSubAccounts
+                : targetSubscription && action === "renew"
+                ? item.for === "groups" && item.id === targetSubscription.id
+                : groupId
+                ? item.for === "groups"
+                : item.for === "individuals"
             )
             .map((item) => (
               <Box
@@ -215,13 +246,29 @@ const Subscriptions = () => {
 
           <DrawerBody className=" gap-2 ">
             <Box className=" gap-4">
-              <Input
-                control={control}
-                name="months"
-                keyboardType="number-pad"
-                label="Months"
-                labelClassName="text-typography-50"
-              />
+              <HStack space="3xl" className=" items-center justify-between">
+                <Box className=" flex-1 ">
+                  <Input
+                    control={control}
+                    name="months"
+                    keyboardType="number-pad"
+                    label="Months"
+                    labelClassName="text-typography-50"
+                  />
+                </Box>
+                <Box className=" flex-[2]">
+                  <HStack className=" items-end justify-center" space="xs">
+                    <Heading size="md" className=" text-typography-50">
+                      FCFA
+                    </Heading>
+                    <Text className=" text-typography-50">
+                      {selectedSubscription && months
+                        ? selectedSubscription.price * months
+                        : selectedSubscription?.price || 0}
+                    </Text>
+                  </HStack>
+                </Box>
+              </HStack>
               <Box>
                 <Text className="text-typography-50">Pay with</Text>
                 <HStack space="xl">
@@ -261,7 +308,7 @@ const Subscriptions = () => {
               )}
             </Box>
           </DrawerBody>
-          <DrawerFooter>
+          <DrawerFooter className=" relative">
             <Button
               onPress={handleSubmit(submit)}
               className="self-end"
@@ -269,6 +316,19 @@ const Subscriptions = () => {
             >
               <ButtonText>Pay Now!</ButtonText>
             </Button>
+            <Box
+              className=" absolute"
+              style={{
+                bottom: -80,
+                width: "100%",
+              }}
+            >
+              <Center>
+                <Heading className=" text-primary-500 capitalize" size="3xl">
+                  {`${selectedSubscription?.name} plan`}
+                </Heading>
+              </Center>
+            </Box>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -281,39 +341,61 @@ function SimpleSubscriptionListCard({
 }: {
   item: Pick<groupT, "id" | "name" | "subcriptionExpiration" | "subcription">;
 }) {
-  const { subscriptions } = useAppContext();
+  const {
+    subscriptions,
+    userMethods: { myGroups },
+  } = useAppContext();
   const subscription = subscriptions.find((sub) => sub.id === item.subcription);
   const expired = new Date(item.subcriptionExpiration!) < new Date();
+
+  const dateFormater = new Intl.DateTimeFormat(undefined, {
+    month: "long",
+    day: "2-digit",
+    year: "numeric",
+  });
   return (
-    <HStack
-      className=" border border-primary-200 rounded-2xl p-2 items-end "
-      space="md"
-    >
+    <VStack className=" border border-primary-200 rounded-2xl p-2" space="md">
       <Box className=" flex-1 gap-2">
         <Heading size="sm" className=" text-primary-50 capitalize">
           {item.name}
         </Heading>
-        <Heading size="2xl" className=" text-primary-500">
-          {subscription?.name}
+        <Heading size="2xl" className=" text-primary-500 capitalize">
+          {`${subscription?.name} Plan`}
         </Heading>
         <HStack className=" items-center">
           {expired ? (
             <>
-              <Text className="text-typography-50">Expired on: </Text>
-              <Text size="lg" className="text-error-500">
-                {new Date(item.subcriptionExpiration!).toLocaleDateString()}
+              <Text className="text-primary-0">Expired on: </Text>
+              <Text className="text-error-500">
+                {dateFormater.format(new Date(item.subcriptionExpiration!))}
               </Text>
             </>
           ) : (
             <>
-              <Text size="lg" className="text-typography-50">
+              <Text size="lg" className="text-primary-0">
                 Expires on:{" "}
               </Text>
               <Text className="text-success-500">
-                {new Date(item.subcriptionExpiration!).toLocaleDateString()}
+                {dateFormater.format(new Date(item.subcriptionExpiration!))}
               </Text>
             </>
           )}
+        </HStack>
+        <HStack space="sm" className="items-center">
+          <Text className="text-primary-0">Principal Accounts:</Text>
+          <Text className="text-typography-0">01</Text>
+        </HStack>
+        <HStack space="sm" className="items-center">
+          <Text className="text-primary-0">Available Sub Accounts:</Text>
+          <Text className="text-typography-0">
+            {myGroups && subscription
+              ? ` ${
+                  subscription.maximumSubAccounts -
+                  myGroups[item.id!].length +
+                  1
+                }/${subscription.maximumSubAccounts}`
+              : ""}
+          </Text>
         </HStack>
       </Box>
       <Box className=" gap-2">
@@ -326,19 +408,34 @@ function SimpleSubscriptionListCard({
               onPress={() => {
                 subscription?.for === "individuals"
                   ? router.setParams({ userId: item.id })
-                  : router.setParams({ groupId: item.id });
+                  : router.setParams({ groupId: item.id, action: "renew" });
               }}
             >
               <ButtonText>Pay</ButtonText>
             </Button>
           </>
         ) : (
-          <Text className=" text-success-500" bold>
-            Active
-          </Text>
+          <>
+            <Button
+              size="xs"
+              variant="outline"
+              action="positive"
+              className=" rounded-full"
+              onPress={() => {
+                subscription?.for === "individuals"
+                  ? router.setParams({ userId: item.id })
+                  : router.setParams({ groupId: item.id, action: "upgrade" });
+              }}
+            >
+              <ButtonText className=" text-success-500">Upgrade</ButtonText>
+            </Button>
+            <Text className=" text-success-500" bold>
+              Active
+            </Text>
+          </>
         )}
       </Box>
-    </HStack>
+    </VStack>
   );
 }
 

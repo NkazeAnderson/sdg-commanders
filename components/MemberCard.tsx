@@ -1,13 +1,13 @@
 import { userT } from "@/types";
 import { CheckCircle, Info, Siren, Trash } from "lucide-react-native";
 import React from "react";
-import { Text } from "react-native";
 import { Avatar, AvatarFallbackText, AvatarImage } from "./ui/avatar";
 import { Box } from "./ui/box";
 import { Button, ButtonIcon } from "./ui/button";
 import { Heading } from "./ui/heading";
 import { HStack } from "./ui/hstack";
 import { Icon } from "./ui/icon";
+import { Text } from "./ui/text";
 
 const MemberCard = ({
   manage,
@@ -46,6 +46,12 @@ const MemberCard = ({
           <Heading className=" text-typography-100 capitalize">
             {user.name}
           </Heading>
+          <HStack className=" items-center  mb-1" space="xs">
+            <Text className={`text-typography-100`} size="sm">
+              Role:
+            </Text>
+            <Text className={`text-secondary-100 lowercase`}>{role}</Text>
+          </HStack>
           <HStack space="sm" className=" items-center">
             <Icon
               className={` ${
@@ -58,11 +64,7 @@ const MemberCard = ({
                 !user.is_safe ? "text-error-100" : "text-success-100"
               } `}
             >
-              {role && manage
-                ? role
-                : user.is_safe
-                ? "In Safety"
-                : "Needs rescue"}
+              {user.is_safe ? "In Safety" : "Needs rescue"}
             </Text>
           </HStack>
         </Box>

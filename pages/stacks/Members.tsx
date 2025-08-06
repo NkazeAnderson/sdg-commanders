@@ -17,6 +17,7 @@ import { groupT, withoutIdT } from "@/types";
 import { hookFormErrorHandler } from "@/utils";
 import { groupsSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Stack } from "expo-router";
 import { ArrowRight, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -68,73 +69,76 @@ const Members = () => {
   const groupsKeys = !myGroups ? [] : Object.keys(myGroups);
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === "android" ? 80 : 0}
-      className="flex-1"
-    >
-      <View className=" flex-1 bg-primary-900 p-4">
-        {Boolean(groupsKeys.length) && myGroups && (
-          <ScrollView>
-            {groupsKeys.map((item) => {
-              const members = myGroups[item];
-              return <GroupMembersList key={item} members={members} manage />;
-            })}
-          </ScrollView>
-        )}
-        {!Boolean(groupsKeys.length) && (
-          <Center className=" flex-1 gap-4 p">
-            {createFamily ? (
-              <Animated.View entering={SlideInDown} className={"w-full"}>
-                <Center>
-                  <Button
-                    onPress={toggleCreateFamily}
-                    action="negative"
-                    className=" rounded-full aspect-square"
-                  >
-                    <ButtonIcon as={X} />
+    <>
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "android" ? 80 : 0}
+        className="flex-1"
+      >
+        <View className=" flex-1 bg-primary-900 p-4">
+          {Boolean(groupsKeys.length) && myGroups && (
+            <ScrollView>
+              {groupsKeys.map((item) => {
+                const members = myGroups[item];
+                return <GroupMembersList key={item} members={members} manage />;
+              })}
+            </ScrollView>
+          )}
+          {!Boolean(groupsKeys.length) && (
+            <Center className=" flex-1 gap-4 p">
+              {createFamily ? (
+                <Animated.View entering={SlideInDown} className={"w-full"}>
+                  <Center>
+                    <Button
+                      onPress={toggleCreateFamily}
+                      action="negative"
+                      className=" rounded-full aspect-square"
+                    >
+                      <ButtonIcon as={X} />
+                    </Button>
+                  </Center>
+                  <Form>
+                    <Heading className=" text-center text-typography-100">
+                      Create a family
+                    </Heading>
+                    <Input
+                      label="Family name"
+                      control={createFamilyForm.control}
+                      name="name"
+                      labelClassName="text-typography-50"
+                      returnKeyLabel="Add"
+                      returnKeyType="send"
+                    />
+                    <Button
+                      disabled={createFamilyForm.formState.isSubmitting}
+                      onPress={createFamilyForm.handleSubmit(
+                        sumbitCreateFamily,
+                        hookFormErrorHandler
+                      )}
+                    >
+                      <ButtonText>Submit</ButtonText>
+                      {!createFamilyForm.formState.isSubmitting ? (
+                        <ButtonIcon as={ArrowRight} />
+                      ) : (
+                        <ButtonSpinner />
+                      )}
+                    </Button>
+                  </Form>
+                </Animated.View>
+              ) : (
+                <>
+                  <Text>You are not a member of a family or organisation</Text>
+                  <Button onPress={toggleCreateFamily}>
+                    <ButtonText>Create a family</ButtonText>
                   </Button>
-                </Center>
-                <Form>
-                  <Heading className=" text-center text-typography-100">
-                    Create a family
-                  </Heading>
-                  <Input
-                    label="Family name"
-                    control={createFamilyForm.control}
-                    name="name"
-                    labelClassName="text-typography-50"
-                    returnKeyLabel="Add"
-                    returnKeyType="send"
-                  />
-                  <Button
-                    disabled={createFamilyForm.formState.isSubmitting}
-                    onPress={createFamilyForm.handleSubmit(
-                      sumbitCreateFamily,
-                      hookFormErrorHandler
-                    )}
-                  >
-                    <ButtonText>Submit</ButtonText>
-                    {!createFamilyForm.formState.isSubmitting ? (
-                      <ButtonIcon as={ArrowRight} />
-                    ) : (
-                      <ButtonSpinner />
-                    )}
-                  </Button>
-                </Form>
-              </Animated.View>
-            ) : (
-              <>
-                <Text>You are not a member of a family or organisation</Text>
-                <Button onPress={toggleCreateFamily}>
-                  <ButtonText>Create a family</ButtonText>
-                </Button>
-              </>
-            )}
-          </Center>
-        )}
-      </View>
-    </KeyboardAvoidingView>
+                </>
+              )}
+            </Center>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+      <Stack.Screen options={{ title: "Groups & Families" }} />
+    </>
   );
 };
 

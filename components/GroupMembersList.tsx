@@ -8,7 +8,7 @@ import { hookFormErrorHandler } from "@/utils";
 import { groupMembersSchema, usersSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { Plus, PlusCircle, X } from "lucide-react-native";
+import { ArrowRight, Plus, PlusCircle, X } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import Animated, { SlideInRight } from "react-native-reanimated";
@@ -22,6 +22,7 @@ import { Button, ButtonIcon, ButtonSpinner, ButtonText } from "./ui/button";
 import { Center } from "./ui/center";
 import { Heading } from "./ui/heading";
 import { HStack } from "./ui/hstack";
+import { Icon } from "./ui/icon";
 import { Text } from "./ui/text";
 import { VStack } from "./ui/vstack";
 
@@ -57,6 +58,8 @@ const GroupMembersList = ({
     (item) => item.id === group?.subcription
   );
 
+  const expired = new Date(group.subcriptionExpiration!) < new Date();
+
   function toggleAddMember() {
     setAddNewMember((prev) => !prev);
   }
@@ -80,14 +83,16 @@ const GroupMembersList = ({
   }
   return (
     <VStack space="xs" className=" border-y border-primary-100/20 py-4">
-      <Center className=" flex-row">
+      <Center>
         <Heading className="text-center text-primary-100 capitalize ">
-          {group.name} -{" "}
+          {group.name}
         </Heading>
-
-        <Text className="text-center text-typography-50 italic">
-          {!subscription ? "No subscription" : subscription.name}
-        </Text>
+        <HStack>
+          <Text className="text-center text-typography-50 italic" size="sm">
+            Subscription -{" "}
+            {!subscription ? "No subscription" : subscription.name}
+          </Text>
+        </HStack>
       </Center>
       {!subscription ? (
         <Box className=" gap-4 py-4">
@@ -172,6 +177,16 @@ const GroupMembersList = ({
           </>
         )
       )}
+      <HStack space="sm" className=" items-end">
+        <Heading className=" text-primary-0">{`Members`}</Heading>
+        {manage && (
+          <Heading className=" text-primary-0" size="xs">{`(${members.length}/${
+            (subscription?.maximumSubAccounts
+              ? subscription?.maximumSubAccounts
+              : 0) + 1
+          })`}</Heading>
+        )}
+      </HStack>
       {members.map((member) => (
         <MemberCard
           key={member.id}
@@ -185,14 +200,18 @@ const GroupMembersList = ({
         members.length === subscription.maximumSubAccounts - 1 && (
           <Box className=" gap-4 py-4">
             <Animated.View entering={SlideInRight.springify()}>
-              <HStack className=" justify-end">
+              <HStack className=" justify-end items-center" space="lg">
+                <Text className=" text-typography-50" italic size="sm">
+                  Limit Reached
+                </Text>
+                <Icon className="text-typography-50 w-3 h-3" as={ArrowRight} />
                 <Button
                   action="positive"
                   className="rounded-l-3xl "
                   onPress={() => {
                     router.push({
                       pathname: "/stacks/subscriptions",
-                      params: { groupId: group.id },
+                      params: { groupId: group.id, action: "upgrade" },
                     });
                   }}
                 >
@@ -202,6 +221,33 @@ const GroupMembersList = ({
             </Animated.View>
           </Box>
         )}
+      {expired && (
+        <Box className=" gap-4 py-4">
+          <Animated.View entering={SlideInRight.springify()}>
+            <HStack className=" justify-end items-center" space="lg">
+              <Text className=" text-typography-50" italic size="sm">
+                Subscription expired
+              </Text>
+              <Icon className="text-typography-50 w-3 h-3" as={ArrowRight} />
+              <Button
+                action="positive"
+                className="rounded-l-3xl "
+                onPress={() => {
+                  router.push({
+                    pathname: "/stacks/subscriptions",
+                    params: {
+                      groupId: group.id,
+                      action: "renew",
+                    },
+                  });
+                }}
+              >
+                <ButtonText>Pay Subscription</ButtonText>
+              </Button>
+            </HStack>
+          </Animated.View>
+        </Box>
+      )}
     </VStack>
   );
 };
