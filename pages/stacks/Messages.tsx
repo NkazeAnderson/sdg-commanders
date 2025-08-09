@@ -4,14 +4,17 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonSpinner } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
-import { defaultCustomerSupportAgent } from "@/constants";
 import { createMessage } from "@/supabase/messages";
 import { messageT } from "@/types";
 import { hookFormErrorHandler } from "@/utils";
+import { Redirect } from "expo-router";
 import { Send } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FlatList, KeyboardAvoidingView, View } from "react-native";
+
+const defaultCustomerSupportAgent: string | undefined =
+  process.env.EXPO_PUBLIC_CUSTOMER_SUPPORT_ID;
 
 const Messages = () => {
   const {
@@ -27,7 +30,7 @@ const Messages = () => {
   const [pendingMessages, setPendingMessages] = useState<messageT[]>([]);
 
   async function submit(data: { text: string }) {
-    const message: messageT = {
+    const message: Omit<messageT, "id"> = {
       sentBy: user?.id!,
       sentTo: defaultCustomerSupportAgent ?? "",
       text: data.text,
@@ -52,7 +55,7 @@ const Messages = () => {
   }
 
   if (!user || !defaultCustomerSupportAgent) {
-    return null;
+    return <Redirect href={".."} />;
   }
 
   return (

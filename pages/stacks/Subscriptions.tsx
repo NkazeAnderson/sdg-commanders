@@ -18,9 +18,10 @@ import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import useToast from "@/hooks/useToast";
 import { supabase } from "@/supabase";
 import { groupT, paymentT } from "@/types";
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { unknownErrorHandler } from "@/utils";
 import { Href, router, useLocalSearchParams } from "expo-router";
 import { CreditCard, Phone } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -52,6 +53,8 @@ const Subscriptions = () => {
 
   const months = watch("months");
 
+  const toast = useToast();
+
   const selectedSubscriptionId = watch("subscription");
   const selectedSubscription = subscriptions.find(
     (item) => item.id === selectedSubscriptionId
@@ -79,28 +82,43 @@ const Subscriptions = () => {
       body: data,
     });
     if (res.data) {
-      const data: {
-        status: "success";
-        message: string;
-        whatsappLink: Href;
-        telegramLink: Href;
-        dikaloLink: Href;
-        smsLink: string;
-      } = res.data;
-
       if (payWith === "card") {
-        router.navigate(data.dikaloLink);
+        const data: {
+          status: "success";
+          message: string;
+          whatsappLink: Href;
+          telegramLink: Href;
+          dikaloLink: Href;
+          smsLink: string;
+        } = res.data;
+        toast.show({ message: "Redirecting to payment screen... " });
+        setTimeout(() => {
+          router.navigate(data.dikaloLink);
+        }, 2000);
+      } else {
+        const data: {
+          status: "SUCCESS";
+          ussdCode: string;
+          vendor: "MTN_CAMEROON";
+        } = res.data;
+        toast.show({
+          message: "Please Dail:  " + data.ussdCode,
+        });
+        router.back();
       }
     }
-    if (res.error instanceof FunctionsHttpError) {
-      console.log(res.error.message, res.error.context);
+    if (res.error) {
+      toast.show({
+        message:
+          "Sorry, we are unable to process your request now! Try again later.",
+        status: "error",
+      });
+      unknownErrorHandler(res.error);
     }
     setShowDrawer(false);
   }
 
   useEffect(() => {
-    console.log(action, targetSubscription);
-
     if (action == "renew" && targetSubscription?.id) {
       setValue("subscription", targetSubscription.id);
       setShowDrawer(true);
@@ -385,18 +403,20 @@ function SimpleSubscriptionListCard({
           <Text className="text-primary-0">Principal Accounts:</Text>
           <Text className="text-typography-0">01</Text>
         </HStack>
-        <HStack space="sm" className="items-center">
-          <Text className="text-primary-0">Available Sub Accounts:</Text>
-          <Text className="text-typography-0">
-            {myGroups && subscription
-              ? ` ${
-                  subscription.maximumSubAccounts -
-                  myGroups[item.id!].length +
-                  1
-                }/${subscription.maximumSubAccounts}`
-              : ""}
-          </Text>
-        </HStack>
+        {myGroups[item.id] && (
+          <HStack space="sm" className="items-center">
+            <Text className="text-primary-0">Available Sub Accounts:</Text>
+            <Text className="text-typography-0">
+              {myGroups && subscription
+                ? ` ${
+                    subscription.maximumSubAccounts -
+                    myGroups[item.id].length +
+                    1
+                  }/${subscription.maximumSubAccounts}`
+                : ""}
+            </Text>
+          </HStack>
+        )}
       </Box>
       <Box className=" gap-2">
         {expired ? (

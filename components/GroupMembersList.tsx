@@ -37,6 +37,9 @@ const GroupMembersList = ({
   members: groupMembersJoinedSchemaT[];
   manage?: boolean;
 }) => {
+  if (!members.length) {
+    return null;
+  }
   const [addNewMember, setAddNewMember] = useState(false);
   const group = members[0]?.group_id;
   const {
@@ -223,7 +226,7 @@ const GroupMembersList = ({
         )}
       {expired && (
         <Box className=" gap-4 py-4">
-          <Animated.View entering={SlideInRight.springify()}>
+          <Animated.View entering={SlideInRight.springify().delay(2000)}>
             <HStack className=" justify-end items-center" space="lg">
               <Text className=" text-typography-50" italic size="sm">
                 Subscription expired

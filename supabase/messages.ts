@@ -1,5 +1,5 @@
 import { tables } from "@/constants";
-import { messageT, userT } from "@/types";
+import { messageT, userT, withoutIdT } from "@/types";
 import { parseDatabaseResponse } from "@/utils";
 import { messagesSchema } from "@/zodSchema";
 import { supabase } from ".";
@@ -8,7 +8,7 @@ const messageTableRef = supabase.from(tables.messages)
 
 
 
-export async function createMessage(message:messageT ) {
+export async function createMessage(message:withoutIdT<messageT>) {
    return await messageTableRef.insert(message)
 }
 

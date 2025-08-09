@@ -8,7 +8,9 @@
     "ios": "DARK_MODE=media expo start --ios",
     "web": "DARK_MODE=media expo start --web",
     "lint": "expo lint",
-    "start-supabase": "cd supabase & npx supabase start"
+    "start-supabase": "cd supabase & npx supabase start",
+    "generate-migrations": "npx drizzle-kit generate",
+    "migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
     "@expo/html-elements": "^0.4.2",

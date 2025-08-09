@@ -12,13 +12,19 @@ import {
 import { Center } from "@/components/ui/center";
 import { Icon } from "@/components/ui/icon";
 import { VStack } from "@/components/ui/vstack";
+import useToast from "@/hooks/useToast";
 import { uploadBase64ImageToSupabase } from "@/supabase/pictures";
 import { updateUser } from "@/supabase/users";
 import { userT } from "@/types";
-import { getImageFromGallery, hookFormErrorHandler } from "@/utils";
+import {
+  getImageFromGallery,
+  hookFormErrorHandler,
+  unknownErrorHandler,
+} from "@/utils";
 import { usersSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePickerAsset } from "expo-image-picker";
+import { router } from "expo-router";
 import { ArrowRight, Camera, CircleUserRound } from "lucide-react-native";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -30,6 +36,7 @@ const EditProfile = () => {
   const {
     userMethods: { user, setUser },
   } = useAppContext();
+  const toast = useToast();
   const {
     control,
     setValue,
@@ -41,23 +48,30 @@ const EditProfile = () => {
   });
 
   async function submit(data: userT) {
-    Object.keys(data).forEach((item) => {
-      //@ts-ignore
-      if (!data[item]) {
+    try {
+      Object.keys(data).forEach((item) => {
         //@ts-ignore
-        delete data[item];
+        if (!data[item]) {
+          //@ts-ignore
+          delete data[item];
+        }
+      });
+      if (profilePictureAsset) {
+        const url = await uploadBase64ImageToSupabase(profilePictureAsset);
+        data.profile_picture = url;
       }
-    });
-    if (profilePictureAsset) {
-      const url = await uploadBase64ImageToSupabase(profilePictureAsset);
-      console.log(url);
-
-      data.profile_picture = url;
+      const res = await updateUser(data);
+      setUser({ ...user, ...data });
+      toast.show({ message: "Successfully updated your profile" });
+      if (res.error) {
+        throw new Error(res.error.message);
+      }
+      router.back();
+      return res;
+    } catch (error) {
+      toast.show({ message: "Sorry, We could not update profile now!" });
+      unknownErrorHandler(error);
     }
-    const res = await updateUser(data);
-    console.log(res);
-    setUser({ ...user, ...data });
-    return res;
   }
 
   return (

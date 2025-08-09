@@ -5,24 +5,24 @@ import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { primaryColors, tables } from "@/constants";
-import { getGroupMember, groupMembersJoinedSchemaT } from "@/supabase/groups";
-import {
-  postgresChangesChannel,
-  registerToPostgresChanges,
-} from "@/supabase/realtime";
+import { registerToPostgresChanges } from "@/supabase/realtime";
 import { groupT } from "@/types";
-import { getUserLocation } from "@/utils";
-import { groupMembersSchema, usersSchema } from "@/zodSchema";
+import { getUserLocation, unknownErrorHandler } from "@/utils";
+import { usersSchema } from "@/zodSchema";
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Settings, Siren } from "lucide-react-native";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 const cachedGroups: groupT[] = [];
 
 const _layout = () => {
   const { setUserLocation, user, setUser, myGroups, setMyGroups } =
     useAppContext().userMethods;
-  const postgresChangesRegistrationStatus = useRef(false);
+  const [
+    postgresChangesRegistrationStatus,
+    setPostgresChangesRegistrationStatus,
+  ] = useState<boolean | undefined>(undefined);
+
   // get the user location and set it in the context
   useEffect(() => {
     getUserLocation()
@@ -30,66 +30,63 @@ const _layout = () => {
       .catch((err) => {
         console.error("Error getting user location:", err);
       });
-    postgresChangesRegistrationStatus.current === false &&
+
+    // setInterval(() => {
+    //   console.log({ postgresChangesRegistrationStatus });
+
+    //   postgresChangesRegistrationStatus === false &&
+    //     postgresChangesChannel.unsubscribe().then(() => {
+    //       console.log("Retrying real time subscription");
+    //       setPostgresChangesRegistrationStatus(undefined);
+    //     });
+    // }, 5000);
+  }, []);
+
+  useEffect(() => {
+    postgresChangesRegistrationStatus === undefined &&
       registerToPostgresChanges(
         (payload) => {
-          console.log(payload);
-
-          if (payload.table === tables.users) {
-            const schema = usersSchema;
-            if (payload.new) {
-              const newUser = schema.parse(payload.new);
-              if (newUser.id === user?.id) {
-                setUser(newUser);
+          console.log({ payload });
+          try {
+            if (payload.table === tables.users) {
+              const schema = usersSchema;
+              if (payload.new) {
+                const newUser = schema.parse(payload.new);
+                if (newUser.id === user?.id) {
+                  setUser(newUser);
+                }
               }
-            }
-          } else if (payload.table === tables.group_members) {
-            if (payload.new) {
-              const member = groupMembersSchema.parse(payload.new);
-              getGroupMember(member.id!)
-                .then((res) => {
-                  console.log(res);
+            } else if (payload.table === tables.groups) {
+              switch (payload.eventType) {
+                case "DELETE":
+                  setMyGroups((prev) => {
+                    delete prev[payload.old.id];
+                    return { ...prev };
+                  });
+                  break;
 
-                  if (res.data && !Array.isArray(res.data)) {
-                    setMyGroups((prev) => {
-                      if (prev && prev[member.group_id]) {
-                        const index = prev[member.group_id].findIndex(
-                          (item) => item.member_id?.id === member.member_id
-                        );
-                        if (index >= 0) {
-                          prev[member.group_id][index] =
-                            res.data as groupMembersJoinedSchemaT;
-                        } else {
-                          prev[member.group_id].push(
-                            res.data as groupMembersJoinedSchemaT
-                          );
-                        }
-                      } else {
-                        prev[member.group_id] = [
-                          res.data as groupMembersJoinedSchemaT,
-                        ];
-                      }
-                      return { ...prev };
-                    });
-                  }
-                })
-                .catch((e) => {
-                  console.log(e);
-                });
+                default:
+                  setUser((prev) => (prev ? { ...prev } : prev));
+                  break;
+              }
+            } else if (payload.table === tables.group_members) {
+              setUser((prev) => (prev ? { ...prev } : prev));
             }
+          } catch (error) {
+            unknownErrorHandler(error);
           }
         },
         (registered) => {
-          postgresChangesRegistrationStatus.current = registered;
+          setPostgresChangesRegistrationStatus(registered);
         }
       );
 
     return () => {
-      postgresChangesChannel.unsubscribe().then(() => {
-        postgresChangesRegistrationStatus.current = false;
-      });
+      // postgresChangesChannel.unsubscribe().then(() => {
+      //   setPostgresChangesRegistrationStatus(undefined);
+      // });
     };
-  }, []);
+  }, [postgresChangesRegistrationStatus]);
 
   return (
     <Tabs

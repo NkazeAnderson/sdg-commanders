@@ -9,7 +9,7 @@ import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
@@ -22,7 +22,6 @@ export default function RootLayout() {
 
   if (url) {
     const { queryParams } = Linking.parse(url);
-    console.log(queryParams);
 
     if (queryParams && queryParams.phone && queryParams.membership_id) {
       supabase.auth.getUser().then((res) => {
@@ -51,11 +50,8 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    console.log("Not loaded in " + Platform.OS);
-
     return null;
   }
-  console.log("Loaded in " + Platform.OS);
   return (
     <>
       <GestureHandlerRootView style={{ flex: 1, display: "flex" }}>

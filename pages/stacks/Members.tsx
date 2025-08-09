@@ -14,7 +14,7 @@ import { Text } from "@/components/ui/text";
 import useToast from "@/hooks/useToast";
 import { createGroup } from "@/supabase/groups";
 import { groupT, withoutIdT } from "@/types";
-import { hookFormErrorHandler } from "@/utils";
+import { hookFormErrorHandler, unknownErrorHandler } from "@/utils";
 import { groupsSchema } from "@/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Stack } from "expo-router";
@@ -33,11 +33,6 @@ import Animated, { SlideInDown } from "react-native-reanimated";
 const Members = () => {
   const [createFamily, setCreateFamily] = useState(false);
 
-  const [addNewMember, setAddNewMember] = useState(false);
-  const { control } = useForm();
-  function toggleAddMember() {
-    setAddNewMember((prev) => !prev);
-  }
   function toggleCreateFamily() {
     setCreateFamily((prev) => !prev);
   }
@@ -53,17 +48,25 @@ const Members = () => {
   });
 
   async function sumbitCreateFamily(data: withoutIdT<groupT>) {
-    if (!user) {
-      throw new Error("User is required");
+    try {
+      if (!user) {
+        throw new Error("User is required");
+      }
+      Keyboard.isVisible() && Keyboard.dismiss();
+      const res = await createGroup(data);
+      if (!res.error) {
+        toast.show({ message: "Family successly created" });
+      } else {
+        throw new Error(res.error.message);
+      }
+      toggleCreateFamily();
+    } catch (error) {
+      unknownErrorHandler(error);
+      toast.show({
+        message: "Sorry, we are unable to create an account now",
+        status: "error",
+      });
     }
-    Keyboard.isVisible() && Keyboard.dismiss();
-    const res = await createGroup(data);
-    if (!res.error) {
-      toast.show({ message: "Family successly created" });
-    } else {
-      toast.show({ message: res.error.message, status: "error" });
-    }
-    toggleCreateFamily();
   }
 
   const groupsKeys = !myGroups ? [] : Object.keys(myGroups);

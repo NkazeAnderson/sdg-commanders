@@ -8,6 +8,7 @@ import { getAllSOS, getMyLastResponse } from "@/supabase/sos";
 import { getSubscriptions } from "@/supabase/subscriptions";
 import { getUserById } from "@/supabase/users";
 import { subscriptionT, userT } from "@/types";
+import { unknownErrorHandler } from "@/utils";
 import { router } from "expo-router";
 import React, {
   createContext,
@@ -54,7 +55,7 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
               toast.show({ message: "Successfully signed in" });
             router.push("/tabs");
           } else if (error) {
-            console.log(error);
+            unknownErrorHandler(error);
           }
         });
         getSubscriptions().then((res) => {
@@ -83,22 +84,27 @@ const AppContextProvider: FC<PropsWithChildren> = (props) => {
     if (user?.is_agent) {
       getMyLastResponse(user.id)
         .then((res) => {
-          res.data ? sosMethods.setLastSosResponse(res.data) : console.log(res);
+          res.data
+            ? sosMethods.setLastSosResponse(res.data)
+            : unknownErrorHandler(res.error);
         })
         .catch((e) => {
-          console.log(e);
+          unknownErrorHandler(e);
         });
     }
     if (user && !messagesMethods.messages.length) {
       getMessages(user)
         .then((res) => {
-          console.log(res);
-
+          if (res.error) {
+            return unknownErrorHandler(res.error);
+          }
           res.data &&
             Array.isArray(res.data) &&
             messagesMethods.setMessages(res.data);
         })
-        .catch((e) => {});
+        .catch((e) => {
+          unknownErrorHandler(e);
+        });
     }
   }, [user]);
 

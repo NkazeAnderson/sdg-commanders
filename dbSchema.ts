@@ -44,12 +44,11 @@ export const GroupsTable = pgTable(tables.groups,{
 
 export const GroupMembersTable = pgTable(tables.group_members, {
   id: uuid().notNull().primaryKey().defaultRandom(),
-  group_id: uuid().notNull().references(() => GroupsTable.id),
+  group_id: uuid().notNull().references(() => GroupsTable.id, {onDelete:"cascade"}),
   member_id:uuid().references(() => usersTable.id),
   role:varchar({length:50}).notNull(),
   invitation_accepted: boolean(),
   created_at: timestamp({mode:"string"}).defaultNow(), // to be used for cron job
-
 })
 
 

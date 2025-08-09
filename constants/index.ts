@@ -31,5 +31,3 @@ export const days = ["monday", "tuesday", "wednesday", "thursday", "saturday", "
 export const storageBuckets = {public: "public-media"} as const
 
 export const taraPaymentApps = [ "whatsappLink", "telegramLink", "dikaloLink" ] as const
-
-export const defaultCustomerSupportAgent:string | undefined = "89604346-2b5b-4d97-b4a3-1ed049828a40"

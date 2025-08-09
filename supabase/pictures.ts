@@ -23,17 +23,12 @@ export async function getBase64FromUri(uri: string): Promise<string> {
 export async function uploadBase64ImageToSupabase(
     asset: ImagePickerAsset
 ): Promise<string> {
-
     const userRes = await supabase.auth.getUser()
-
   if ( !userRes.data.user?.id) {
     throw new Error("Base 64 required or unauthenticanted");
-    
   }
   const fileName = `${userRes.data.user.id}/${new Date().getTime()}_${asset.fileName ?? "file"}.${asset.mimeType?.split("/")[1]}`
-
    const base64 = await getBase64FromUri(asset.uri)
-    // Upload to Supabase Storage
     const { error } = await supabase.storage
         .from(storageBuckets.public)
         .upload(fileName, decode(base64), {
@@ -42,13 +37,9 @@ export async function uploadBase64ImageToSupabase(
         });
 
     if (error) {
-        console.log(error);
-        
         throw new Error("Failed to upload");
         ;
     }
-
-    // Get public URL
     const { data:{publicUrl} } = supabase.storage.from(storageBuckets.public).getPublicUrl(fileName);
     return publicUrl 
 }

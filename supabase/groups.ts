@@ -29,7 +29,9 @@ if (groupsRes.data) {
 return {data:myGroups, errors}
 }
 export async function getGroupMember(membershipId:string) {
-    const membersRes = await groupMembersTableRef.select("*, group_id (*), member_id (*)").eq("id", membershipId).single()
+    const membersRes = await groupMembersTableRef.select("*").eq("id", membershipId).limit(1).single()
+    console.log(membersRes);
+    
     return parseDatabaseResponse(membersRes, groupMembersJoinedSchema)
 }
 

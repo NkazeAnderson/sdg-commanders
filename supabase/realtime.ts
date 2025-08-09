@@ -6,7 +6,7 @@ export const postgresChangesChannel = supabase
 
 export  function registerToPostgresChanges(callback:(payload:RealtimePostgresChangesPayload<{
     [key: string]: any;
-}>)=>void, updateRegistrationStatus:(registered:boolean)=>void) {
+}>)=>void, updateRegistrationStatus:(registered:boolean|undefined)=>void) {
   postgresChangesChannel
   .on(
     'postgres_changes',
@@ -17,7 +17,7 @@ export  function registerToPostgresChanges(callback:(payload:RealtimePostgresCha
     (payload) => callback(payload)
   )
   .subscribe((status)=>{
-    console.log({status});
-    status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED && updateRegistrationStatus(true)
+    console.log("Realtime subscription",{status});
+    status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED ? updateRegistrationStatus(true) :  updateRegistrationStatus(false)
   })
   }
